@@ -172,3 +172,11 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# macOS system files
+.DS_Store
+
+# Firebase or service account credentials
+*-creds.json
+*.creds.json
+*.credentials.json
