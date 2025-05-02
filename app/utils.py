@@ -1,15 +1,36 @@
-import os
 import openai
-from openai import OpenAI
+from os import getenv
+from dotenv import load_dotenv
+from firebase_admin import auth as firebase_auth
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+load_dotenv()
+
+# API Keys
+openai.api_key = getenv("OPENAI_API_KEY")
+
+# Firebase JS SDK Config (for injection into login.html)
+FIREBASE_JS_CONFIG = {
+    "apiKey": getenv("FIREBASE_API_KEY"),
+    "authDomain": getenv("FIREBASE_AUTH_DOMAIN"),
+    "projectId": getenv("FIREBASE_PROJECT_ID"),
+    "appId": getenv("FIREBASE_APP_ID"),
+}
 
 
-# 🧠 Placeholder — replace with real model call (e.g. Hugging Face or Ollama)
+# Placeholder LLM treatment function
 def generate_treatment(content: str, method: str) -> str:
     return f"[{method} treatment applied to content]:\n\n{content}"
 
 
-# 🧠 Prompt-based analysis (placeholder for real scoring)
+# Placeholder scoring logic
 def analyze_content(content: str) -> str:
-    return f"Scoring analysis of submitted content: [This is a placeholder result for: '{content[:60]}...']"
+    return f"Scoring analysis: [placeholder result for: '{content[:60]}...']"
+
+
+# Firebase session helpers
+def verify_firebase_token(token: str):
+    return firebase_auth.verify_id_token(token)
+
+
+def get_current_user(token: str):
+    return verify_firebase_token(token)
