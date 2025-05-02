@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RankLab AI – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+</head>
+<body class="bg-white sans-serif">
+  <div class="mw6 center mt5">
+    <div class="mb4">
+      <img src="/static/img/logo.png" alt="RankLab AI Logo" class="logo" />
+      <h1 class="f3 black-80 mt2 mb1">RankLab AI</h1>
+      <p class="gray f6 mt0">Digital Agency</p>
+    </div>
+
+    <div class="ba b--black-10 pa4 br2 shadow-4">
+      <h2 class="f4 black-90 mb2">Create an account</h2>
+      <p class="f6 gray mb3">Enter your email to sign up for this app</p>
+
+      <input id="email" type="email" placeholder="email@domain.com"
+             class="input-reset ba b--black-20 pa2 mb2 db w-100 br2" />
+
+      <button onclick="emailSignIn()" class="bg-black white w-100 pv2 br2 b--black pointer">
+        Sign up with email
+      </button>
+
+      <div class="tc mv3 gray">or continue with</div>
+
+      <button onclick="googleSignIn()" class="w-100 bg-light-gray pv2 br2 b--black-10 pointer flex items-center justify-center">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h1 mr2" />
+        Google
+      </button>
+
+      <p class="f7 gray tc mt3">By clicking continue, you agree to our 
+        <a href="#" class="black underline">Terms of Service</a> and 
+        <a href="#" class="black underline">Privacy Policy</a>.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {{ firebase_config | tojson | safe }};
+    firebase.initializeApp(firebaseConfig);
+
+    async function emailSignIn() {
+      const email = document.getElementById("email").value;
+      const auth = firebase.auth();
+      try {
+        const { user } = await auth.signInWithEmailAndPassword(email, "temporary-password");
+        const token = await user.getIdToken();
+        await sendTokenToBackend(token);
+      } catch (err) {
+        alert("Sign in failed: " + err.message);
+      }
+    }
+
+    async function googleSignIn() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await firebase.auth().signInWithPopup(provider);
+        const token = await result.user.getIdToken();
+        await sendTokenToBackend(token);
+      } catch (err) {
+        alert("Google sign-in failed: " + err.message);
+      }
+    }
+
+    async function sendTokenToBackend(idToken) {
+      const response = await fetch("/session-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken })
+      });
+
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else {
+        const data = await response.json();
+        alert(data.error || "Login failed");
+      }
+    }
+  </script>
+</body>
+</html>
