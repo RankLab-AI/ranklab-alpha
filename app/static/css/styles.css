@@ -1,0 +1,28 @@
+/* Typography and Base */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f9fc;
+  }
+
+/* Header Titles */
+.header {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* Card / Panel Styling */
+.card-custom {
+    border-radius: 12px;
+    border: 1px solid #e3e8ee;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Sidebar */
+.sidebar {
+    min-height: 100vh;
+}
+
+/* Utility Shadows */
+.shadow-card {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
