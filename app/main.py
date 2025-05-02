@@ -1,40 +1,103 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
 import os
-from dotenv import load_dotenv
-from firebase_admin import initialize_app, auth, firestore
-from utils import llm_generate_content, analyze_content
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from firebase_admin import credentials, initialize_app, auth
+import uvicorn
 
-load_dotenv()
+from app.utils import (
+    verify_firebase_token,
+    get_current_user,
+    FIREBASE_JS_CONFIG,
+)
 
+# Initialize FastAPI app
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
 
-# Initialize Firebase
-firebase_credentials = {
-    "type": "service_account",
-    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
-    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
-    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
-    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
-    "client_id": os.getenv("FIREBASE_CLIENT_ID"),
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL"),
-}
+# Mount static folder
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-initialize_app(firebase_credentials)
+# Firebase Admin SDK init
+firebase_creds_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+cred = credentials.Certificate(firebase_creds_path)
+initialize_app(cred)
 
 
-@app.get("/")
-async def home(request: Request):
-    return templates.TemplateResponse("landing.html", {"request": request})
+# Injected Login Page with Firebase config
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(
+        "login.html", {"request": request, "firebase_config": FIREBASE_JS_CONFIG}
+    )
 
 
-@app.get("/signup")
+# Root redirect: handle session or reroute to login
+@app.get("/", response_class=RedirectResponse)
+async def read_root(request: Request):
+    id_token = request.cookies.get("firebase_id_token")
+    if not id_token:
+        return RedirectResponse(url="/login")
+
+    try:
+        usr_attrs = verify_firebase_token(id_token)
+    except Exception:
+        return RedirectResponse(url="/login")
+
+    response = RedirectResponse(url="/dashboard")
+    response.set_cookie(key="user_id", value=usr_attrs["uid"], httponly=True, secure=True)
+    response.set_cookie(key="email", value=usr_attrs.get("email"), httponly=True)
+    return response
+
+
+# Token-based session login (called by client-side Firebase)
+@app.post("/session-login")
+async def session_login(request: Request):
+    body = await request.json()
+    id_token = body.get("idToken")
+
+    if not id_token:
+        return JSONResponse({"error": "Missing ID token"}, status_code=400)
+
+    try:
+        decoded_token = verify_firebase_token(id_token)
+        email = decoded_token.get("email")
+        uid = decoded_token.get("uid")
+
+        response = RedirectResponse(url="/", status_code=303)
+        response.set_cookie(key="firebase_id_token", value=id_token, httponly=True, secure=True)
+        response.set_cookie(key="user_id", value=uid, httponly=True, secure=True)
+        response.set_cookie(key="email", value=email, httponly=True)
+        return response
+
+    except Exception as e:
+        print(f"Error verifying token: {e}")
+        return JSONResponse({"error": "Invalid ID token"}, status_code=403)
+
+
+# Protected dashboard route
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    id_token = request.cookies.get("firebase_id_token")
+    if not id_token:
+        return RedirectResponse(url="/login")
+
+    try:
+        user = verify_firebase_token(id_token)
+    except Exception:
+        return RedirectResponse(url="/login")
+
+    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+
+
+@app.post("/login")
+async def login(email: str, password: str):
+    raise HTTPException(status_code=400, detail="Use Firebase client SDK on frontend for login.")
+
+
+# Optional signup admin interface
+@app.get("/signup", response_class=HTMLResponse)
 async def signup(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
@@ -48,63 +111,15 @@ async def handle_signup(email: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/dashboard")
-async def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+@app.post("/logout")
+async def logout():
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie("firebase_id_token")
+    response.delete_cookie("user_id")
+    response.delete_cookie("email")
+    return response
 
 
-@app.get("/content-audit")
-async def content_audit(request: Request):
-    return templates.TemplateResponse("content_audit.html", {"request": request})
-
-
-@app.post("/analyze-content")
-async def analyze_content_endpoint(content: str):
-    result = analyze_content(content)
-    return JSONResponse(result)
-
-
-@app.get("/content-generator")
-async def content_generator(request: Request):
-    return templates.TemplateResponse("content_generator.html", {"request": request})
-
-
-@app.post("/generate-content")
-async def generate_content(topic: str, outline: str, tone: str, language: str):
-    generated_content = llm_generate_content(topic, outline, tone, language)
-    return JSONResponse({"content": generated_content})
-
-
-@app.get("/query-search")
-async def query_search(request: Request):
-    return templates.TemplateResponse("query_search.html", {"request": request})
-
-
-@app.post("/search-queries")
-async def search_queries(keyword: str):
-    # Example logic: Fetch related queries from an API or database
-    related_queries = [
-        {"long_keyword": "how to start a successful blog from scratch"},
-        {"long_keyword": "step by step guide to creating a blog"},
-    ]
-    return JSONResponse(related_queries)
-
-
-@app.get("/competitor-analysis")
-async def competitor_analysis(request: Request):
-    return templates.TemplateResponse("competitor_analysis.html", {"request": request})
-
-
-@app.post("/login")
-async def login(email: str, password: str):
-    try:
-        user = auth.sign_in_with_email_and_password(email, password)
-        return {"message": "Login successful", "user_id": user.uid}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
+# 💻 Local dev command
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
