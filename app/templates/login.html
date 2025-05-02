@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – RankLab AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/img/icon.png" type="image/png" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+</head>
+
+<body class="bg-white sans-serif">
+  <div class="vh-100 flex flex-column justify-center items-center">
+    <div class="mb4 tc">
+      <img src="/static/img/logo.png" alt="RankLab AI Logo" class="h3" />
+    </div>
+
+    <div class="ba b--black-10 pa4 br3 shadow-1 w-90 w-30-m w-25-l">
+      <h2 class="f4 black-90 mb2 tc">Log in to your account</h2>
+      <p class="f6 gray mb3 tc">Enter your email and password to continue</p>
+
+      <form id="loginForm" onsubmit="return false;" class="mb3">
+        <input id="email" type="email" placeholder="email@domain.com"
+               class="input-reset ba b--black-20 pa2 mb2 db w-100 br2" required />
+
+        <input id="password" type="password" placeholder="password"
+               class="input-reset ba b--black-20 pa2 mb3 db w-100 br2" required />
+
+        <button type="submit"
+                class="bg-black white w-100 pv2 br2 b--black pointer">
+          Log in with email
+        </button>
+      </form>
+
+      <div class="tc mv3 gray">or continue with</div>
+
+      <button onclick="googleSignIn()"
+              class="w-100 bg-light-gray pv2 br2 b--black-10 pointer flex items-center justify-center">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h1 mr2" />
+        Google
+      </button>
+
+      <div id="loginError" class="dark-red f6 tc mt3" style="display: none;"></div>
+
+      <p class="f7 gray tc mt4">
+        Don’t have an account? <a href="#" class="black underline">Contact Admin</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {{ firebase_config | tojson }};
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("loginForm");
+      const errorBox = document.getElementById("loginError");
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const result = await auth.signInWithEmailAndPassword(email, password);
+          const idToken = await result.user.getIdToken();
+
+          const response = await fetch("/session-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken })
+          });
+
+          if (response.ok) {
+            window.location.href = "/dashboard";
+          } else {
+            const msg = await response.text();
+            errorBox.style.display = "block";
+            errorBox.textContent = msg || "Login failed. Please try again.";
+          }
+        } catch (err) {
+          console.error("Login error:", err);
+          errorBox.style.display = "block";
+          errorBox.textContent = err.message || "Login failed.";
+        }
+      });
+    });
+
+    async function googleSignIn() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const token = await result.user.getIdToken();
+        const response = await fetch("/session-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: token })
+        });
+        if (response.ok) {
+          window.location.href = "/dashboard";
+        }
+      } catch (err) {
+        alert("Google sign-in failed: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
