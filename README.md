@@ -54,7 +54,7 @@ ranklab-alpha/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-org/ranklab-alpha.git
+git clone https://github.com/RankLab-AI/ranklab-alpha.git
 cd ranklab-alpha
 ```
 
