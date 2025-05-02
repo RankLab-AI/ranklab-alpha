@@ -4,48 +4,122 @@
   <meta charset="UTF-8" />
   <title>Dashboard – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="/static/img/icon.png" type="image/png" />
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f7f9fc;
-    }
-    .header {
-      font-weight: 600;
-      font-size: 1.5rem;
-    }
-    .card-custom {
-      border-radius: 12px;
-      border: 1px solid #e3e8ee;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-  </style>
+  <link rel="icon" href="/static/img/icon.png" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
 </head>
-<body>
-  <div class="container py-5">
-    <div class="text-center mb-5">
-      <img src="/static/img/logo.png" alt="RankLab Logo" style="height: 60px;">
-      <h1 class="mt-3 header">Welcome to RankLab</h1>
-      <p class="text-muted">Your personal AI-powered SEO scoring lab</p>
-    </div>
 
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card card-custom p-4">
-          <h5>Hi, {{ user.email }}</h5>
-          <p class="text-muted small mb-3">You are successfully logged in.</p>
+<body class="bg-near-white">
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="sidebar w5 bg-white pa3 shadow-card">
+      <div class="mb4 tc">
+        <img src="/static/img/logo.png" class="h3 center" alt="RankLab AI Logo" />
+      </div>
+      <nav class="f6">
+        <a href="/dashboard" class="db pa2 black-80 hover-bg-light-gray br2">
+          <span class="material-icons-outlined mr2 v-mid">dashboard</span> Dashboard
+        </a>
+        <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
+          <span class="material-icons-outlined mr2 v-mid">science</span> Content Audit
+        </a>
+        <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
+          <span class="material-icons-outlined mr2 v-mid">edit_note</span> Content Generator
+        </a>
+        <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
+          <span class="material-icons-outlined mr2 v-mid">search</span> Query Search
+        </a>
+        <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
+          <span class="material-icons-outlined mr2 v-mid">bar_chart</span> Competitor Analysis
+        </a>
+        <form action="/logout" method="post" class="mt4">
+          <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib black w-100 bg-light-red">Logout</button>
+        </form>
+      </nav>
+    </aside>
 
-          <a href="#" class="btn btn-outline-primary btn-block mb-2">Run Content Audit</a>
-          <a href="#" class="btn btn-outline-secondary btn-block mb-2">Open RankLab Playground</a>
-          <a href="#" class="btn btn-outline-dark btn-block">View Benchmarks</a>
-          <form action="/logout" method="post">
-            <button class="btn btn-outline-danger btn-sm mt-4" type="submit">Logout</button>
-          </form>
+    <!-- Main content -->
+    <main class="flex-auto pa4">
+      <div class="flex justify-between items-center mb4">
+        <h2 class="header black-80">Welcome back!</h2>
+        <input type="text" placeholder="Search…" class="pa2 ba b--black-20 br2 w5">
+      </div>
+
+      <!-- Stats overview -->
+      <div class="flex flex-wrap gap2 mb4">
+        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 mr3 card-custom">
+          <h4 class="f5 fw6 black-60 ttu tracked mb2">AI Visibility Score</h4>
+          <div class="flex items-end justify-between">
+            <span class="f1 fw7 black-90">33</span>
+            <span class="f6 fw5 green">+20% MoM</span>
+          </div>
+        </div>
+        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 mr3 card-custom">
+          <h4 class="f5 fw6 black-60 ttu tracked mb2">Pages Passing Compliance</h4>
+          <div class="flex items-end justify-between">
+            <span class="f1 fw7 black-90">12</span>
+            <span class="f6 fw5 green">+33% MoM</span>
+          </div>
+        </div>
+        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 card-custom">
+          <h4 class="f5 fw6 black-60 ttu tracked mb2">Audited Pages</h4>
+          <div class="flex items-end justify-between">
+            <span class="f1 fw7 black-90">40</span>
+            <span class="f6 fw5 green">+8% MoM</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- Charts and tables -->
+      <div class="flex flex-wrap gap3">
+        <div class="w-100 w-60-l bg-white pa3 br3 mr3 mb3 card-custom">
+          <h3 class="f6 black-70 mb2">
+            <span class="material-icons-outlined v-mid mr1">trending_up</span> Visibility Trend
+          </h3>
+          <img src="/static/img/mock-line-chart.png" class="w-100 br2" alt="Line Chart" />
+        </div>
+
+        <div class="w-100 w-35-l bg-white pa3 br3 mb3 card-custom">
+          <h3 class="f6 black-70 mb2">
+            <span class="material-icons-outlined v-mid mr1">pie_chart</span> LLM Traffic Contribution
+          </h3>
+          <table class="f7 w-100 collapse">
+            <thead>
+              <tr class="bb b--black-10">
+                <th class="tl pv2">Source</th>
+                <th class="tr pv2">Sessions</th>
+                <th class="tr pv2">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Google</td><td class="tr">4321</td><td class="tr green">+84%</td></tr>
+              <tr><td>ChatGPT</td><td class="tr">4033</td><td class="tr red">−8%</td></tr>
+              <tr><td>Perplexity</td><td class="tr">3128</td><td class="tr green">+2%</td></tr>
+              <tr><td>Llama</td><td class="tr">2104</td><td class="tr green">+33%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="w-100 w-40-l bg-white pa3 br3 mr3 card-custom">
+          <h3 class="f6 black-70 mb2">
+            <span class="material-icons-outlined v-mid mr1">link</span> LLM Traffic per Page
+          </h3>
+          <ul class="list pl0 f7">
+            <li class="mb1">URL 1 — <span class="black-60">4321</span> <span class="green">+84%</span></li>
+            <li class="mb1">URL 2 — <span class="black-60">4033</span> <span class="red">−8%</span></li>
+            <li class="mb1">URL 3 — <span class="black-60">3128</span> <span class="green">+2%</span></li>
+          </ul>
+        </div>
+
+        <div class="w-100 w-55-l bg-white pa3 br3 card-custom">
+          <h3 class="f6 black-70 mb2">
+            <span class="material-icons-outlined v-mid mr1">insights</span> Yearly AI Mentions
+          </h3>
+          <img src="/static/img/mock-bar-chart.png" class="w-100 br2" alt="Bar Chart" />
+        </div>
+      </div>
+    </main>
   </div>
 </body>
 </html>
