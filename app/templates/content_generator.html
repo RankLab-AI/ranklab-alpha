@@ -1,0 +1,17 @@
+<form hx-post="/generate-content" hx-target="#generated-content" class="mt3">
+    <input type="text" name="topic" placeholder="Enter your blog topic." class="w-100 pa2 br2 b--black-20 mb3">
+    <textarea name="outline" placeholder="Enter your blog outline here." class="w-100 pa2 br2 b--black-20 mb3"></textarea>
+    <select name="tone">
+      <option value="friendly">Friendly</option>
+      <option value="professional">Professional</option>
+    </select>
+    <select name="language">
+      <option value="en">English</option>
+      <option value="fr">French</option>
+    </select>
+    <button type="submit" class="btn-primary w-100">Generate</button>
+  </form>
+
+  <div id="generated-content" class="mt4">
+    <!-- Generated content will appear here -->
+  </div>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+  <nav class="bg-near-white pa3 flex items-center">
+    <div class="flex items-center">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="RankLab AI Logo" width="32" height="32" class="mr2">
+      <span class="f4 fw6">RankLab AI</span>
+    </div>
+  </nav>
+
+  <section class="container mw8 center pv4">
+    <h1 class="f3 fw6">Competitor Analysis</h1>
+
+    <div class="flex justify-between items-center mb3">
+      <input type="text" placeholder="Search competitors..." class="input-reset pa2 br2 b--black-20 mr2 w-50">
+      <button class="btn-secondary"><i class="fas fa-filter"></i> Filter</button>
+    </div>
+
+    <p class="f5 mt4">Coming soon!</p>
+  </section>
+{% endblock %}

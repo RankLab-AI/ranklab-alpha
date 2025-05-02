@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block body %}
+  <nav class="bg-near-white pa3 flex items-center">
+    <div class="flex items-center">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="RankLab AI Logo" width="32" height="32" class="mr2">
+      <span class="f4 fw6">RankLab AI</span>
+    </div>
+  </nav>
+
+  <section class="container mw8 center pv4">
+    <h1 class="f3 fw6">Conversational Query Search</h1>
+
+    <div class="flex justify-between items-center mb3">
+      <input type="text" placeholder="Search queries..." class="input-reset pa2 br2 b--black-20 mr2 w-50">
+      <button class="btn-secondary"><i class="fas fa-filter"></i> Filter</button>
+    </div>
+
+    <ol class="list-reset">
+      <li class="mb2">
+        <label for="keyword">Enter your target keyword</label>
+        <input id="keyword" type="text" value="how to build a blog" class="w-100 pa2 br2 b--black-20 mb2">
+      </li>
+      <li class="mb2">
+        <details>
+          <summary class="cursor-pointer">More Settings</summary>
+          <div class="mt2">
+            <label for="language">Language</label>
+            <select id="language" class="w-100 pa2 br2 b--black-20 mb2">
+              <option value="en">English</option>
+              <option value="fr">French</option>
+            </select>
+          </div>
+        </details>
+      </li>
+    </ol>
+
+    <button class="btn-primary w-100">Create Content</button>
+
+    <table class="w-100 mt4">
+      <thead><tr><th>Number</th><th>Long Keyword</th><th>Title</th><th>Search</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><mark>how to start a successful blog from scratch</mark></td><td>Starting a Successful Blog from Scratch</td><td>Informational</td></tr>
+        <tr><td>2</td><td><mark>step by step guide to creating a blog</mark></td><td>Step-by-Step Guide to Creating a Blog</td><td>Informational</td></tr>
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
