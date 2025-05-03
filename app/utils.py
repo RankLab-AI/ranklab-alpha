@@ -34,3 +34,14 @@ def verify_firebase_token(token: str):
 
 def get_current_user(token: str):
     return verify_firebase_token(token)
+
+
+PROMPT_TEMPLATE = "<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{user_msg}[/INST]"
+
+
+def get_prompt(source, query):
+    system_prompt = """You are a helpful, respectful and honest assistant.
+Given a web source, and context, your only purpose is to summarize the source, and extract topics that may be relevant to the context. Even if a line is distinctly relevant to the context, include that in the summary. It is preferable to pick chunks of text, instead of isolated lines.
+"""
+    user_msg = f"### Context: ```\n{query}\n```\n\n### Source: ```\n{source}\n```\nNow summarize the text in more than 1000 words, keeping in mind the context and the purpose of the summary. Be as detailed as possible.\n"
+    return PROMPT_TEMPLATE.format(system_prompt=system_prompt, user_msg=user_msg)
