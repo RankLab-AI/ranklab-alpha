@@ -63,15 +63,15 @@ Copy the sample `.env.example` and rename it to `.env`:
 cp .env.example .env
 ```
 
-Then fill in the following required values:
-- `OPENAI_API_KEY`
-- `FIREBASE_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `FIREBASE_PROJECT_ID`
-- `FIREBASE_APP_ID`
-- `FIREBASE_CLIENT_EMAIL` and service key parts (if not using JSON path)
-- `FIREBASE_SERVICE_ACCOUNT_JSON` (if using JSON credentials)
-- `VENICE_API_KE`Y → **used for calling the Venice.ai enhanced LLM completions**
+Then fill in the following values using the Firebase Console:
+- `FIREBASE_API_KEY`: Go to **Project Settings → General → Your Apps → Firebase SDK snippet (Config)**
+- `FIREBASE_AUTH_DOMAIN`: Same section as above
+- `FIREBASE_PROJECT_ID`: Found under **Project Settings → General**
+- `FIREBASE_APP_ID`: In **Firebase SDK snippet (Config)**
+
+Then fill in the remaining required values:
+- `FIREBASE_SERVICE_ACCOUNT_JSON` (for using JSON credentials)
+- `VENICE_API_KEY` → **used for calling the Venice.ai enhanced LLM completions**
 
 ### 4. 🔐 Firebase Setup (Required for Auth)
 
