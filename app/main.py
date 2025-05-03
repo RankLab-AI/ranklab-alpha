@@ -8,7 +8,6 @@ import uvicorn
 
 from app.utils import (
     verify_firebase_token,
-    get_current_user,
     FIREBASE_JS_CONFIG,
 )
 
