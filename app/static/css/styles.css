@@ -26,3 +26,13 @@ body {
 .shadow-card {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
+
+/* Remove underline from all anchor tags inside sidebar */
+.sidebar a {
+    text-decoration: none;
+  }
+
+  /* Optional: also remove it on hover if needed */
+.sidebar a:hover {
+    text-decoration: none;
+  }
