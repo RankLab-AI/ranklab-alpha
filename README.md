@@ -21,20 +21,12 @@ ranklab-alpha/
 │
 ├── app/                   # Core app (frontend/backend integration)
 │   ├── main.py            # FastAPI entry point
-│   ├── routes/            # API route definitions (e.g., /score, /treat)
-│   ├── services/          # Logic for scoring, treatments, benchmarks
-│   └── templates/         # Jinja templates for server-rendered views
-│
-├── treatments/            # Scripts or prompt templates for content treatments
-│   ├── quotation.py
-│   ├── stats.py
-│   └── fluency.py
-│
-├── scoring/               # GEO-style proxy scoring modules
-│   ├── relevance.py
-│   ├── fluency.py
-│   ├── perplexity.py
-│   └── metrics.py
+│   ├── metrics.py         # Simple functions for computing metrics
+│   ├── scoring.py         # Logic for scoring, treatments, benchmarks
+│   ├── templates/         # Jinja templates for server-rendered views
+│   └── treatments/        # Scripts or prompt templates for content treatments
+│       ├── apply.py
+│       └── prompts.py
 │
 ├── benchmarks/            # GEO-Bench test slices (for evaluation)
 │   └── examples/
@@ -44,7 +36,6 @@ ranklab-alpha/
 ├── .env.example           # Sample environment variable config
 ├── .gitignore
 ├── requirements.txt       # Python dependencies
-├── pyproject.toml         # Optional (e.g., for Ruff/Poetry config)
 ├── README.md
 └── LICENSE
 ```
@@ -74,9 +65,13 @@ cp .env.example .env
 
 Then fill in the following required values:
 - `OPENAI_API_KEY`
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
 - `FIREBASE_PROJECT_ID`
-- `OPENAI_FIREBASE_SERVICE_ACCOUNT_JSON`
-- `API_KEY`
+- `FIREBASE_APP_ID`
+- `FIREBASE_CLIENT_EMAIL` and service key parts (if not using JSON path)
+- `FIREBASE_SERVICE_ACCOUNT_JSON` (if using JSON credentials)
+- `VENICE_API_KE`Y → **used for calling the Venice.ai enhanced LLM completions**
 
 ### 4. 🔐 Firebase Setup (Required for Auth)
 
