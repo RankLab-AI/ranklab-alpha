@@ -45,3 +45,20 @@ Content:
 \"\"\"
 Fluency-Optimized Version:
 """
+
+KEYWORD_STUFFING_PROMPT = """
+Here is the source that you need to update:
+
+## Task:
+Add NEW keywords in the source that optimize the content in accordance with SEO principles. These keywords must not already be in the text.
+
+## Guidelines:
+1. Identify 5–10 relevant SEO keywords to insert.
+2. Keywords should be naturally embedded in existing sentences.
+3. Preserve sentence structure and original meaning.
+4. Do not remove or reorder content.
+5. Output only the updated content in triple backticks.
+
+Updated Output:
+<updated text>
+"""

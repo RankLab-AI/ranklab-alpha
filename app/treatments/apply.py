@@ -4,12 +4,14 @@ from treatments.prompts import (
     QUOTATION_PROMPT,
     STATS_PROMPT,
     FLUENCY_PROMPT,
+    KEYWORD_STUFFING_PROMPT,
 )
 
 SUPPORTED_METHODS = {
     "quotation": QUOTATION_PROMPT,
     "stats": STATS_PROMPT,
     "fluency": FLUENCY_PROMPT,
+    "keyword": KEYWORD_STUFFING_PROMPT,
 }
 
 
@@ -18,7 +20,7 @@ def apply_treatment(method: str, content: str, query: str = "") -> str:
     Constructs a treatment prompt for the specified method.
 
     Args:
-        method (str): One of ['quotation', 'stats', 'fluency']
+        method (str): One of ['quotation', 'stats', 'fluency', 'keyword']
         content (str): The original content
         query (str): Optional, relevant query for contextual methods
 
