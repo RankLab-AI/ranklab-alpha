@@ -17,20 +17,24 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Default risk keywords
-DEFAULT_RISK_KEYWORDS = ["scam", "lawsuit", "fraud", "controversial", "fake", "not trustworthy", "outdated"]
+DEFAULT_RISK_KEYWORDS = [
+    "scam",
+    "lawsuit",
+    "fraud",
+    "controversial",
+    "fake",
+    "not trustworthy",
+    "outdated",
+]
+
 
 # GROQ API call
 def get_groq_response(brand_name, model="llama3-70b-8192"):
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": f"What is {brand_name}?"}
-        ],
-        "temperature": 0.7
+        "messages": [{"role": "user", "content": f"What is {brand_name}?"}],
+        "temperature": 0.7,
     }
     try:
         response = requests.post(GROQ_API_URL, headers=headers, json=payload)
@@ -39,12 +43,14 @@ def get_groq_response(brand_name, model="llama3-70b-8192"):
     except Exception as e:
         return f"Error from GROQ API: {e}"
 
+
 # Get custom risk keywords
 def get_custom_keywords():
     user_input = input("Add custom risk keywords (comma-separated, leave blank for default): ")
     if user_input.strip():
         return DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in user_input.split(",")]
     return DEFAULT_RISK_KEYWORDS
+
 
 # Analyze sentiment and risk
 def analyze_risk(text, keywords):
@@ -58,6 +64,7 @@ def analyze_risk(text, keywords):
             risks.append(f"⚠️ '{keyword}'")
     return risks
 
+
 # Sentiment label
 def get_sentiment_label(text):
     blob = TextBlob(text)
@@ -69,6 +76,7 @@ def get_sentiment_label(text):
     else:
         return f"Neutral ({score:.2f})"
 
+
 # Reputation score
 # Reputation score
 def calculate_reputation_score(sentiment_score, num_risks, num_sources):
@@ -79,6 +87,7 @@ def calculate_reputation_score(sentiment_score, num_risks, num_sources):
     reputation = max(0, min(100, base + sentiment_factor - risk_penalty + source_boost))
     return round(reputation, 2)  # Round to 2 decimal places
 
+
 # Keyword extraction
 def extract_keywords(text, max_keywords=5):
     doc = nlp(text)
@@ -87,15 +96,18 @@ def extract_keywords(text, max_keywords=5):
     most_common = keyword_freq.most_common(max_keywords)
     return ", ".join([kw for kw, _ in most_common]) if most_common else "—"
 
+
 # Entity extraction
 def extract_entities(text, labels={"ORG", "PERSON", "GPE"}):
     doc = nlp(text)
     return ", ".join(set(ent.text for ent in doc.ents if ent.label_ in labels)) or "—"
 
+
 # Phrase extraction
 def extract_search_phrases(text, max_phrases=2):
-    sentences = re.findall(r'([A-Z][^\.!?]{20,200}[\.!?])', text)
+    sentences = re.findall(r"([A-Z][^\.!?]{20,200}[\.!?])", text)
     return sentences[:max_phrases]
+
 
 # DuckDuckGo search
 def search_duckduckgo(query, max_results=3):
@@ -116,6 +128,7 @@ def search_duckduckgo(query, max_results=3):
     except Exception as e:
         return [f"Search error: {e}"]
 
+
 # Source-checking
 def get_sources(text):
     phrases = extract_search_phrases(text)
@@ -123,10 +136,11 @@ def get_sources(text):
     for phrase in phrases:
         search_results = search_duckduckgo(phrase)
         if search_results:
-            sources.append(f"Search for \"{phrase}\":\n  - " + "\n  - ".join(search_results))
+            sources.append(f'Search for "{phrase}":\n  - ' + "\n  - ".join(search_results))
         else:
-            sources.append(f"No search results found for \"{phrase}\"")
+            sources.append(f'No search results found for "{phrase}"')
     return sources
+
 
 # GNews search (demo key)
 def fetch_news_newsdata(query, max_articles=3):
@@ -141,6 +155,7 @@ def fetch_news_newsdata(query, max_articles=3):
             return [f"News error: {response.status_code}"]
     except Exception as e:
         return [f"News fetch error: {e}"]
+
 
 # Main
 if __name__ == "__main__":
@@ -169,14 +184,35 @@ if __name__ == "__main__":
         sources_summary = "\n".join(sources) if sources else "No sources found."
         news_summary = "\n".join(news_links) if news_links else "No news found."
 
-        results.append([
-            brand, summary, sentiment_label, risk_summary, keywords, entities,
-            f"{reputation}/100", sources_summary, news_summary
-        ])
+        results.append(
+            [
+                brand,
+                summary,
+                sentiment_label,
+                risk_summary,
+                keywords,
+                entities,
+                f"{reputation}/100",
+                sources_summary,
+                news_summary,
+            ]
+        )
 
     print("\n=== Brand Summary Comparison ===\n")
-    print(tabulate(
-        results,
-        headers=["Brand", "LLM Summary", "Sentiment", "Risk Flags", "Keywords", "Entities", "Reputation", "Sources", "News"],
-        tablefmt="grid"
-    ))
+    print(
+        tabulate(
+            results,
+            headers=[
+                "Brand",
+                "LLM Summary",
+                "Sentiment",
+                "Risk Flags",
+                "Keywords",
+                "Entities",
+                "Reputation",
+                "Sources",
+                "News",
+            ],
+            tablefmt="grid",
+        )
+    )
