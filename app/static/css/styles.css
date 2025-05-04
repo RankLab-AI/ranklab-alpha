@@ -46,3 +46,13 @@ button, .btn {
 button:hover, .btn:hover {
     background-color: #222 !important;
 }
+
+button:not(.logout-btn), .btn:not(.logout-btn) {
+    background-color: black !important;
+    color: white !important;
+    border: none;
+}
+
+button:not(.logout-btn):hover, .btn:not(.logout-btn):hover {
+    background-color: #222 !important;
+}
