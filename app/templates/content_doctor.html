@@ -22,7 +22,7 @@
         <span class="f6 gray">Paste any content and get immediate scoring.</span>
       </div>
 
-      <form method="post" action="/content-doctor" id="contentForm">
+      <form method="post" action="/analyze" id="contentForm">
         <textarea 
           name="content" 
           placeholder="Paste your content here…" 
@@ -32,24 +32,24 @@
 
         <button 
           type="submit" 
-          class="btn btn-primary bg-dark-blue white br2 ph4 pv2 b">
+          class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
           Analyze Content
         </button>
       </form>
 
-      {% if scores %}
-        <div class="mt4">
-          <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
-          <div class="flex flex-wrap gap2">
-            {% for metric, score in scores.items() %}
-              <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
-                <div class="f6 black-70">{{ metric }}</div>
-                <div class="f2 fw7 black-90">{{ "%.2f"|format(score) }}</div>
-              </div>
-            {% endfor %}
-          </div>
+    {% if scores %}
+      <div class="mt4">
+        <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
+        <div class="flex flex-wrap gap2">
+          {% for label, value in scores.items() %}
+            <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
+              <div class="f6 black-70">{{ label }}</div>
+              <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
+            </div>
+          {% endfor %}
         </div>
-      {% endif %}
+      </div>
+    {% endif %}
     </main>
   </div>
 </body>
