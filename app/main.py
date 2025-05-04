@@ -8,7 +8,11 @@ from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
-from app.metrics import impression_wordpos_count_simple
+from app.metrics import (
+    impression_wordpos_count_simple,
+    impression_word_count_simple,
+    impression_pos_count_simple,
+)
 from app.scoring import extract_citations_new
 from app.utils import (
     verify_firebase_token,
@@ -136,24 +140,29 @@ def content_doctor_page(request: Request):
 
 
 @app.post("/analyze", response_class=HTMLResponse)
-def analyze_content(content: str = Form(...)):
+async def analyze(request: Request, content: str = Form(...)):
     try:
         parsed = extract_citations_new(content)
-        scores = impression_wordpos_count_simple(parsed)
-        score_display = "".join(
-            f'<li class="mb1">Section {i + 1}: <strong>{round(score * 100, 1)}%</strong></li>'
-            for i, score in enumerate(scores)
-        )
-        return HTMLResponse(
-            content=f"""
-            <div class='bg-light-yellow pa3 br2 shadow-card'>
-              <h4 class='f5 fw6 mb2'>Current Visibility Scores</h4>
-              <ul class='list pl0 f6 black-70'>
-                {score_display}
-              </ul>
-            </div>
-            """,
-            status_code=200,
+        n = 5
+
+        def avg_score(raw):
+            if not isinstance(raw, (list, tuple)):
+                return 0.0
+            return round(sum(raw) / len(raw) * 100, 2) if raw else 0.0
+
+        scores = {
+            "Word+Position": avg_score(impression_wordpos_count_simple(parsed, n)),
+            "Word-only": avg_score(impression_word_count_simple(parsed, n)),
+            "Position-only": avg_score(impression_pos_count_simple(parsed, n)),
+        }
+
+        return templates.TemplateResponse(
+            "content_doctor.html",
+            {
+                "request": request,
+                "content": content,
+                "scores": scores,
+            },
         )
     except Exception as e:
         return HTMLResponse(f"<div class='red f6'>Error: {str(e)}</div>", status_code=500)
