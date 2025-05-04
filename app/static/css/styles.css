@@ -30,9 +30,19 @@ body {
 /* Remove underline from all anchor tags inside sidebar */
 .sidebar a {
     text-decoration: none;
-  }
+}
 
-  /* Optional: also remove it on hover if needed */
+/* Optional: also remove it on hover if needed */
 .sidebar a:hover {
     text-decoration: none;
+}
+
+button, .btn {
+    background-color: black !important;
+    color: white !important;
+    border: none;
   }
+
+button:hover, .btn:hover {
+    background-color: #222 !important;
+}
