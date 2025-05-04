@@ -1,4 +1,5 @@
 import os
+from json import loads
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -18,9 +19,16 @@ templates = Jinja2Templates(directory="app/templates")
 # Mount static folder
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Firebase Admin SDK init
-firebase_creds_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-cred = credentials.Certificate(firebase_creds_path)
+firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+# If it's a file path
+if os.path.isfile(firebase_json):
+    cred = credentials.Certificate(firebase_json)
+# If it's a raw JSON string
+else:
+    cred_dict = loads(firebase_json)
+    cred = credentials.Certificate(cred_dict)
+
 initialize_app(cred)
 
 
