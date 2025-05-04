@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block body %}
+  <nav class="bg-near-white pa3 flex items-center">
+    <div class="flex items-center">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="RankLab AI Logo" width="32" height="32" class="mr2">
+      <span class="f4 fw6">RankLab AI</span>
+    </div>
+  </nav>
+
+  <section class="container mw8 center pv4">
+    <h1 class="f3 fw6">Brand Protection Analysis</h1>
+
+    <form class="mv4" method="POST">
+      <div class="mb3">
+        <label class="f5 db mb2">Your Brand</label>
+        <input type="text" name="main_brand" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter your brand name" required>
+      </div>
+
+      <div class="mb3">
+        <label class="f5 db mb2">Competitor Brands</label>
+        <input type="text" name="competitors" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter competitors (comma-separated)">
+      </div>
+
+      <div class="mb3">
+        <label class="f5 db mb2">Custom Risk Keywords</label>
+        <input type="text" name="risk_keywords" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter additional risk keywords (comma-separated)">
+      </div>
+
+      <button type="submit" class="btn-primary">Analyze Brands</button>
+    </form>
+
+    {% if results %}
+    <div class="results mt4">
+      {% for result in results %}
+      <div class="brand-card pa3 mb3 ba b--black-10 br2">
+        <h3 class="f4 mb2">{{ result[0] }}</h3>
+        
+        <div class="grid-container">
+          <div class="summary-section mb3">
+            <h4 class="f5 mb2">Summary</h4>
+            <p class="f6">{{ result[1] }}</p>
+          </div>
+
+          <div class="metrics-section flex justify-between mb3">
+            <div class="w-third pr2">
+              <h4 class="f5 mb2">Sentiment</h4>
+              <span class="f6 {% if 'Positive' in result[2] %}green{% elif 'Negative' in result[2] %}red{% endif %}">
+                {{ result[2] }}
+              </span>
+            </div>
+            
+            <div class="w-third ph2">
+              <h4 class="f5 mb2">Reputation Score</h4>
+              <span class="f6">{{ result[6] }}</span>
+            </div>
+
+            <div class="w-third pl2">
+              <h4 class="f5 mb2">Risk Flags</h4>
+              <span class="f6 {% if '⚠️' in result[3] %}red{% endif %}">{{ result[3] }}</span>
+            </div>
+          </div>
+
+          <div class="analysis-section mb3">
+            <div class="mb2">
+              <h4 class="f5 mb2">Keywords</h4>
+              <p class="f6">{{ result[4] }}</p>
+            </div>
+            <div class="mb2">
+              <h4 class="f5 mb2">Entities</h4>
+              <p class="f6">{{ result[5] }}</p>
+            </div>
+          </div>
+
+          <div class="sources-section">
+            <h4 class="f5 mb2">Sources</h4>
+            <div class="f6 pre-wrap">{{ result[7] }}</div>
+            
+            <h4 class="f5 mb2 mt3">Recent News</h4>
+            <div class="f6 pre-wrap">{{ result[8] }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <style>
+    .pre-wrap {
+      white-space: pre-wrap;
+    }
+    .green {
+      color: #2ecc71;
+    }
+    .red {
+      color: #e74c3c;
+    }
+  </style>
+{% endblock %}
