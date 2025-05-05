@@ -28,13 +28,13 @@ body {
 }
 
 /* Remove underline from all anchor tags inside sidebar */
-.sidebar a {
-    text-decoration: none;
+aside.sidebar a {
+    text-decoration: none !important;
 }
 
 /* Optional: also remove it on hover if needed */
-.sidebar a:hover {
-    text-decoration: none;
+aside.sidebar a:hover {
+    text-decoration: none !important;
 }
 
 /* Custom Brand Protector styles */
@@ -46,4 +46,10 @@ body {
 }
 .red {
     color: #e74c3c;
+}
+
+.sidebar .material-icons-outlined {
+    vertical-align: middle;
+    margin-right: 0.5rem;
+    font-size: 18px;
 }
