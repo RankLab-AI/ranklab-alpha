@@ -36,3 +36,14 @@ body {
 .sidebar a:hover {
     text-decoration: none;
 }
+
+/* Custom Brand Protector styles */
+.pre-wrap {
+    white-space: pre-wrap;
+}
+.green {
+    color: #2ecc71;
+}
+.red {
+    color: #e74c3c;
+}
