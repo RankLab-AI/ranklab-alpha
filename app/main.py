@@ -1,5 +1,7 @@
 import os
 from json import loads
+import logging
+from typing import Dict, Union
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -7,9 +9,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
-import logging
-from typing import Dict, Union
 
+from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
 from app.metrics import (
     impression_wordpos_count_simple,
     impression_word_count_simple,
@@ -149,29 +150,27 @@ def content_doctor_page(request: Request):
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def analyze(request: Request, content: str = Form(...)):
-     # Input validation
+    # Input validation
     if not content or len(content.strip()) == 0:
         return HTMLResponse(
-            "<div class='red f6'>Error: Content cannot be empty</div>", 
-            status_code=400
+            "<div class='red f6'>Error: Content cannot be empty</div>", status_code=400
         )
-    
+
     if len(content) > 50000:  # Example max length
         return HTMLResponse(
-            "<div class='red f6'>Error: Content too long (max 50000 characters)</div>", 
-            status_code=400
+            "<div class='red f6'>Error: Content too long (max 50000 characters)</div>",
+            status_code=400,
         )
 
     try:
         # Parse content
         logging.debug(f"Analyzing content of length: {len(content)}")
         parsed = extract_citations_new(content)
-        
+
         if not parsed:
             logging.warning("Failed to parse content")
             return HTMLResponse(
-                "<div class='red f6'>Error: Unable to parse content</div>", 
-                status_code=400
+                "<div class='red f6'>Error: Unable to parse content</div>", status_code=400
             )
 
         logging.debug(f"Successfully parsed content: {parsed[:100]}...")  # Log first 100 chars
@@ -202,8 +201,7 @@ async def analyze(request: Request, content: str = Form(...)):
         except Exception as e:
             logging.error(f"Error calculating scores: {e}")
             return HTMLResponse(
-                "<div class='red f6'>Error calculating scores</div>", 
-                status_code=500
+                "<div class='red f6'>Error calculating scores</div>", status_code=500
             )
 
         return templates.TemplateResponse(
@@ -217,9 +215,33 @@ async def analyze(request: Request, content: str = Form(...)):
     except Exception as e:
         logging.error(f"Unexpected error in analyze route: {e}")
         return HTMLResponse(
-            "<div class='red f6'>An unexpected error occurred</div>", 
-            status_code=500
+            "<div class='red f6'>An unexpected error occurred</div>", status_code=500
         )
+
+
+@app.get("/brand-protector", response_class=HTMLResponse)
+async def brand_protector(request: Request):
+    return templates.TemplateResponse("brand_protector.html", {"request": request, "results": []})
+
+
+@app.post("/brand-protector", response_class=HTMLResponse)
+async def brand_protector_run(
+    request: Request,
+    main_brand: str = Form(...),
+    competitors: str = Form(""),
+    risk_keywords: str = Form(""),
+):
+    all_brands = [main_brand.strip()] + [c.strip() for c in competitors.split(",") if c.strip()]
+    custom_keywords = (
+        DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in risk_keywords.split(",")]
+        if risk_keywords
+        else DEFAULT_RISK_KEYWORDS
+    )
+    results = [run_brand_analysis(brand, custom_keywords) for brand in all_brands]
+
+    return templates.TemplateResponse(
+        "brand_protector.html", {"request": request, "results": results}
+    )
 
 
 # 💻 Local dev command

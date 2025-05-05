@@ -1,32 +1,49 @@
 <!-- File: app/templates/partials/sidebar.html -->
-<aside class="sidebar w5 bg-white pa3 shadow-card">
-    <div class="mb4 tc">
-      <img src="/static/img/logo.png" class="h3 center" alt="RankLab AI Logo" />
-    </div>
-    <nav class="f6">
-      <a href="/content-doctor" class="db pa2 black-80 hover-bg-light-gray br2">
+<aside class="sidebar w6 bg-white pa3 shadow-card" style="width: 260px; min-height: 100vh; min-width: 18rem;">
+  <div class="mb4 tc">
+    <img src="/static/img/logo.png" class="h3 center" alt="RankLab AI Logo" />
+  </div>
+  <nav class="f6 flex flex-column">
+    <a href="/brand-protector" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
+      <span class="flex items-center">
+        <span class="material-icons-outlined mr2 v-mid">security</span>
+        Brand Protector
+      </span>
+      <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
+    </a>
+
+    <a href="/content-doctor" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
+      <span class="flex items-center">
         <span class="material-icons-outlined mr2 v-mid">medical_information</span>
-        Content Doctor <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
-      </a>
-      <a href="/dashboard" class="db pa2 black-80 hover-bg-light-gray br2">
-        <span class="material-icons-outlined mr2 v-mid">dashboard</span> Dashboard
-      </a>
-      <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
-        <span class="material-icons-outlined mr2 v-mid">science</span> Content Audit
-      </a>
-      <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
-        <span class="material-icons-outlined mr2 v-mid">edit_note</span> Content Generator
-      </a>
-      <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
-        <span class="material-icons-outlined mr2 v-mid">search</span> Query Search
-      </a>
-      <a href="#" class="db pa2 black-80 hover-bg-light-gray br2">
-        <span class="material-icons-outlined mr2 v-mid">bar_chart</span> Competitor Analysis
-      </a>
-      <form action="/logout" method="post" class="mt4">
-        <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib w-100 bg-light-red">
-            Logout
-        </button>
-      </form>
-    </nav>
+        Content Doctor
+      </span>
+      <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
+    </a>
+
+    <a href="/dashboard" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
+      <span class="material-icons-outlined mr2 v-mid">dashboard</span> Dashboard
+    </a>
+
+    <a href="#" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
+      <span class="material-icons-outlined mr2 v-mid">science</span> Content Audit
+    </a>
+
+    <a href="#" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
+      <span class="material-icons-outlined mr2 v-mid">edit_note</span> Content Generator
+    </a>
+
+    <a href="#" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
+      <span class="material-icons-outlined mr2 v-mid">search</span> Query Search
+    </a>
+
+    <a href="#" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
+      <span class="material-icons-outlined mr2 v-mid">bar_chart</span> Competitor Analysis
+    </a>
+
+    <form action="/logout" method="post" class="mt4">
+      <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib w-100 bg-light-red">
+        Logout
+      </button>
+    </form>
+  </nav>
 </aside>
