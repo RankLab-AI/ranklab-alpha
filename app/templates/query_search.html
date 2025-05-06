@@ -1,47 +1,84 @@
-{% extends "base.html" %}
-{% block body %}
-  <nav class="bg-near-white pa3 flex items-center">
-    <div class="flex items-center">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="RankLab AI Logo" width="32" height="32" class="mr2">
-      <span class="f4 fw6">RankLab AI</span>
-    </div>
-  </nav>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Query Search – RankLab AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/img/icon.png" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+</head>
 
-  <section class="container mw8 center pv4">
-    <h1 class="f3 fw6">Conversational Query Search</h1>
+<body class="bg-near-white">
+  <div class="flex" style="min-height: 100vh; align-items: stretch;">
+    <!-- Sidebar -->
+    <aside class="sidebar bg-white pa3 shadow-card" style="width: 18rem; flex-shrink: 0;">
+      {% include "partials/sidebar.html" %}
+    </aside>
 
-    <div class="flex justify-between items-center mb3">
-      <input type="text" placeholder="Search queries..." class="input-reset pa2 br2 b--black-20 mr2 w-50">
-      <button class="btn-secondary"><i class="fas fa-filter"></i> Filter</button>
-    </div>
+    <!-- Main Content -->
+    <main class="flex-auto pa4">
+      <div class="flex justify-between items-center mb4">
+        <h2 class="header black-80">🔍 Query Search</h2>
+        <span class="f6 gray">Explore and expand keyword intent using conversational queries.</span>
+      </div>
 
-    <ol class="list-reset">
-      <li class="mb2">
-        <label for="keyword">Enter your target keyword</label>
-        <input id="keyword" type="text" value="how to build a blog" class="w-100 pa2 br2 b--black-20 mb2">
-      </li>
-      <li class="mb2">
-        <details>
-          <summary class="cursor-pointer">More Settings</summary>
-          <div class="mt2">
-            <label for="language">Language</label>
-            <select id="language" class="w-100 pa2 br2 b--black-20 mb2">
-              <option value="en">English</option>
-              <option value="fr">French</option>
-            </select>
-          </div>
-        </details>
-      </li>
-    </ol>
+      <div class="flex justify-between items-center mb3">
+        <input type="text" placeholder="Search queries..." class="input-reset pa2 br2 b--black-20 mr2 w-50">
+        <button class="btn-secondary"><i class="material-icons-outlined v-mid">filter_alt</i> Filter</button>
+      </div>
 
-    <button class="btn-primary w-100">Create Content</button>
+      <form>
+        <ol class="list-reset">
+          <li class="mb3">
+            <label class="f6 db mb1" for="keyword">Enter your target keyword</label>
+            <input id="keyword" type="text" value="how to build a blog" class="w-100 pa2 br2 b--black-20">
+          </li>
+          <li class="mb3">
+            <details>
+              <summary class="cursor-pointer f6 fw6">More Settings</summary>
+              <div class="mt2">
+                <label class="f6 db mb1" for="language">Language</label>
+                <select id="language" class="w-100 pa2 br2 b--black-20">
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                </select>
+              </div>
+            </details>
+          </li>
+        </ol>
 
-    <table class="w-100 mt4">
-      <thead><tr><th>Number</th><th>Long Keyword</th><th>Title</th><th>Search</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td><mark>how to start a successful blog from scratch</mark></td><td>Starting a Successful Blog from Scratch</td><td>Informational</td></tr>
-        <tr><td>2</td><td><mark>step by step guide to creating a blog</mark></td><td>Step-by-Step Guide to Creating a Blog</td><td>Informational</td></tr>
-      </tbody>
-    </table>
-  </section>
-{% endblock %}
+        <button class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray w-100">Create Content</button>
+      </form>
+
+      <div class="mt4 overflow-auto">
+        <table class="collapse ba br2 b--black-10 w-100">
+          <thead>
+            <tr class="striped--near-white">
+              <th class="pv2 ph3 tl f6 fw6 ttu">#</th>
+              <th class="pv2 ph3 tl f6 fw6 ttu">Long Keyword</th>
+              <th class="pv2 ph3 tl f6 fw6 ttu">Title</th>
+              <th class="pv2 ph3 tl f6 fw6 ttu">Search Type</th>
+            </tr>
+          </thead>
+          <tbody class="lh-copy">
+            <tr>
+              <td class="pv2 ph3">1</td>
+              <td class="pv2 ph3"><mark>how to start a successful blog from scratch</mark></td>
+              <td class="pv2 ph3">Starting a Successful Blog from Scratch</td>
+              <td class="pv2 ph3">Informational</td>
+            </tr>
+            <tr>
+              <td class="pv2 ph3">2</td>
+              <td class="pv2 ph3"><mark>step by step guide to creating a blog</mark></td>
+              <td class="pv2 ph3">Step-by-Step Guide to Creating a Blog</td>
+              <td class="pv2 ph3">Informational</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
