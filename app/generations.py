@@ -2,6 +2,9 @@
 
 from openai import OpenAI
 import os, uuid, time, pickle
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # Setup Venice API client (OpenAI-compatible)
 openai_client = OpenAI(api_key=os.getenv("VENICE_API_KEY"), base_url="https://api.venice.ai/api/v1")

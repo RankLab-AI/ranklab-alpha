@@ -2,6 +2,7 @@ import os
 from json import loads
 import logging
 from typing import Dict, Union
+from app.utils.query_search import run_query_search
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -242,6 +243,29 @@ async def brand_protector_run(
     return templates.TemplateResponse(
         "brand_protector.html", {"request": request, "results": results}
     )
+
+@app.get("/query-search", response_class=HTMLResponse)
+async def query_search_page(request: Request):
+    return templates.TemplateResponse("query_search.html", {"request": request})
+
+
+@app.post("/query-search", response_class=HTMLResponse)
+async def run_query_search(request: Request, topic: str = Form(...)):
+    from app.utils.query_search import run_query_search as execute_search
+    try:
+        result = execute_search(topic)
+        return templates.TemplateResponse("query_search.html", {
+            "request": request,
+            "topic": result["topic"],
+            "queries": result["queries"],
+            "results": result["results"]
+        })
+    except Exception as e:
+        return templates.TemplateResponse("query_search.html", {
+            "request": request,
+            "error": f"Failed to fetch queries: {str(e)}"
+        })
+
 
 
 # 💻 Local dev command
