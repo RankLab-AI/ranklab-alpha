@@ -91,3 +91,57 @@ FIREBASE_SERVICE_ACCOUNT_JSON=secrets/firebase-creds.json
 ```bash
 uvicorn app.main:app --reload
 ```
+
+## 🤝 Contributing
+
+Thank you for your interest in contributing to RankLab Alpha! This is an early-stage prototype, and we welcome well-structured contributions that preserve clarity and maintainability.
+
+### Ground Rules
+
+* **NEVER commit directly to `main`.** Always create a feature or fix branch (e.g. `feature/add-treatment-x`).
+* Keep code **modular, minimal, and readable**.
+* Respect the code style. Use automatic formatting before committing.
+
+### Code Formatting
+
+We use [`ruff`](https://docs.astral.sh/ruff/) for formatting and linting.
+
+#### Install Ruff
+
+```bash
+pip install ruff
+```
+
+#### Format Files
+
+To format all treatment files:
+
+```bash
+ruff format --line-length 100 app/treatments/*.py
+```
+
+To format all app-level modules:
+
+```bash
+ruff format --line-length 100 app/*.py
+```
+
+### Alternative: Using `black`
+
+If you prefer [`black`](https://black.readthedocs.io/en/stable/):
+
+```bash
+pip install black
+black -l 100 app/*.py
+```
+
+You can also configure formatting tools via `pyproject.toml` (ask if you'd like to add this).
+
+### Summary
+
+* Follow formatting rules using `ruff` or `black`
+* Work on a separate branch, not `main`
+* Keep changes focused and clearly scoped
+* Avoid breaking existing functionality
+
+Feel free to open an issue or discussion before implementing large changes.

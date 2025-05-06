@@ -1,15 +1,32 @@
 import os
-from fastapi import FastAPI, Request, HTTPException
+from json import loads
+import logging
+from typing import Dict, Union
+
+from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
+from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
+from app.metrics import (
+    impression_wordpos_count_simple,
+    impression_word_count_simple,
+    impression_pos_count_simple,
+)
+from app.scoring import extract_citations_new
 from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
 )
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -18,9 +35,16 @@ templates = Jinja2Templates(directory="app/templates")
 # Mount static folder
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Firebase Admin SDK init
-firebase_creds_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-cred = credentials.Certificate(firebase_creds_path)
+firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+# If it's a file path
+if os.path.isfile(firebase_json):
+    cred = credentials.Certificate(firebase_json)
+# If it's a raw JSON string
+else:
+    cred_dict = loads(firebase_json)
+    cred = credentials.Certificate(cred_dict)
+
 initialize_app(cred)
 
 
@@ -117,6 +141,107 @@ async def logout():
     response.delete_cookie("user_id")
     response.delete_cookie("email")
     return response
+
+
+@app.get("/content-doctor", response_class=HTMLResponse)
+def content_doctor_page(request: Request):
+    return templates.TemplateResponse("content_doctor.html", {"request": request})
+
+
+@app.post("/analyze", response_class=HTMLResponse)
+async def analyze(request: Request, content: str = Form(...)):
+    # Input validation
+    if not content or len(content.strip()) == 0:
+        return HTMLResponse(
+            "<div class='red f6'>Error: Content cannot be empty</div>", status_code=400
+        )
+
+    if len(content) > 50000:  # Example max length
+        return HTMLResponse(
+            "<div class='red f6'>Error: Content too long (max 50000 characters)</div>",
+            status_code=400,
+        )
+
+    try:
+        # Parse content
+        logging.debug(f"Analyzing content of length: {len(content)}")
+        parsed = extract_citations_new(content)
+
+        if not parsed:
+            logging.warning("Failed to parse content")
+            return HTMLResponse(
+                "<div class='red f6'>Error: Unable to parse content</div>", status_code=400
+            )
+
+        logging.debug(f"Successfully parsed content: {parsed[:100]}...")  # Log first 100 chars
+        n = 5
+
+        def avg_score(raw: Union[list, tuple]) -> float:
+            """Calculate average score with proper validation"""
+            if not isinstance(raw, (list, tuple)):
+                logging.warning(f"Invalid type for avg_score: {type(raw)}")
+                return 0.0
+            if not raw:
+                logging.warning("Empty input for avg_score")
+                return 0.0
+            try:
+                return round(sum(raw) / len(raw) * 100, 2)
+            except (TypeError, ValueError) as e:
+                logging.error(f"Error calculating average score: {e}")
+                return 0.0
+
+        # Calculate scores with error handling
+        try:
+            scores: Dict[str, float] = {
+                "Word+Position": avg_score(impression_wordpos_count_simple(parsed, n)),
+                "Word-only": avg_score(impression_word_count_simple(parsed, n)),
+                "Position-only": avg_score(impression_pos_count_simple(parsed, n)),
+            }
+            logging.debug(f"Calculated scores: {scores}")
+        except Exception as e:
+            logging.error(f"Error calculating scores: {e}")
+            return HTMLResponse(
+                "<div class='red f6'>Error calculating scores</div>", status_code=500
+            )
+
+        return templates.TemplateResponse(
+            "content_doctor.html",
+            {
+                "request": request,
+                "content": content,
+                "scores": scores,
+            },
+        )
+    except Exception as e:
+        logging.error(f"Unexpected error in analyze route: {e}")
+        return HTMLResponse(
+            "<div class='red f6'>An unexpected error occurred</div>", status_code=500
+        )
+
+
+@app.get("/brand-protector", response_class=HTMLResponse)
+async def brand_protector(request: Request):
+    return templates.TemplateResponse("brand_protector.html", {"request": request, "results": []})
+
+
+@app.post("/brand-protector", response_class=HTMLResponse)
+async def brand_protector_run(
+    request: Request,
+    main_brand: str = Form(...),
+    competitors: str = Form(""),
+    risk_keywords: str = Form(""),
+):
+    all_brands = [main_brand.strip()] + [c.strip() for c in competitors.split(",") if c.strip()]
+    custom_keywords = (
+        DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in risk_keywords.split(",")]
+        if risk_keywords
+        else DEFAULT_RISK_KEYWORDS
+    )
+    results = [run_brand_analysis(brand, custom_keywords) for brand in all_brands]
+
+    return templates.TemplateResponse(
+        "brand_protector.html", {"request": request, "results": results}
+    )
 
 
 # 💻 Local dev command

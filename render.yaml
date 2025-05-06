@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ranklab-alpha
+    runtime: python
+    repo: https://github.com/RankLab-AI/ranklab-alpha
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: VENICE_API_KEY
+        value: ""
+      - key: OPENAI_API_KEY
+        value: ""
+      - key: FIREBASE_API_KEY
+        value: ""
+      - key: FIREBASE_AUTH_DOMAIN
+        value: ""
+      - key: FIREBASE_PROJECT_ID
+        value: ""
+      - key: FIREBASE_APP_ID
+        value: ""
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        value: ""
