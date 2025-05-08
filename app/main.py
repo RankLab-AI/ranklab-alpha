@@ -12,12 +12,13 @@ from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
 from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
-from app.metrics import (
-    impression_wordpos_count_simple,
-    impression_word_count_simple,
-    impression_pos_count_simple,
+from app.scoring import (
+    impression_wordpos_count_simple_spacy,
+    impression_word_count_simple_spacy,
+    impression_pos_count_simple_spacy,
+    extract_citations_spacy,
 )
-from app.scoring import extract_citations_new
+
 from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
@@ -166,7 +167,7 @@ async def analyze(request: Request, content: str = Form(...)):
     try:
         # Parse content
         logging.debug(f"Analyzing content of length: {len(content)}")
-        parsed = extract_citations_new(content)
+        parsed = extract_citations_spacy(content)
 
         if not parsed:
             logging.warning("Failed to parse content")
@@ -177,26 +178,18 @@ async def analyze(request: Request, content: str = Form(...)):
         logging.debug(f"Successfully parsed content: {parsed[:100]}...")  # Log first 100 chars
         n = 5
 
-        def avg_score(raw: Union[list, tuple]) -> float:
-            """Calculate average score with proper validation"""
-            if not isinstance(raw, (list, tuple)):
-                logging.warning(f"Invalid type for avg_score: {type(raw)}")
-                return 0.0
-            if not raw:
-                logging.warning("Empty input for avg_score")
-                return 0.0
-            try:
-                return round(sum(raw) / len(raw) * 100, 2)
-            except (TypeError, ValueError) as e:
-                logging.error(f"Error calculating average score: {e}")
-                return 0.0
+        def avg_score(raw):
+            non_zero = [x for x in raw if x > 0]
+            if not non_zero:
+                return round((1 / len(raw)) * 100, 2)
+            return round(sum(non_zero) / len(non_zero) * 100, 2)
 
         # Calculate scores with error handling
         try:
             scores: Dict[str, float] = {
-                "Word+Position": avg_score(impression_wordpos_count_simple(parsed, n)),
-                "Word-only": avg_score(impression_word_count_simple(parsed, n)),
-                "Position-only": avg_score(impression_pos_count_simple(parsed, n)),
+                "Word+Position": avg_score(impression_wordpos_count_simple_spacy(parsed, n)),
+                "Word-only": avg_score(impression_word_count_simple_spacy(parsed, n)),
+                "Position-only": avg_score(impression_pos_count_simple_spacy(parsed, n)),
             }
             logging.debug(f"Calculated scores: {scores}")
         except Exception as e:
