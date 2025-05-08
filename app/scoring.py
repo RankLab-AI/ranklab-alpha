@@ -1,38 +1,34 @@
-import re
+# File: app/scoring.py
+
+from typing import Dict
+from .metrics import (
+    extract_citations_spacy,
+    impression_wordpos_count_simple_spacy,
+    impression_word_count_simple_spacy,
+    impression_pos_count_simple_spacy,
+)
 
 
-def simple_sent_tokenize(text):
+def compute_scores(text: str, n: int = 5, normalize: bool = True) -> Dict[str, float]:
     """
-    Splits text into sentences using basic punctuation heuristics.
+    Parse `text`, extract citations via spaCy, then compute
+    three GEO‐style metrics. Returns each as a percentage.
     """
-    # Add space after punctuation if not followed by space already (edge case cleanup)
-    text = re.sub(r"([.?!])([A-Z])", r"\1 \2", text)
-    # Naive sentence splitting by punctuation
-    return re.split(r"(?<=[.?!])\s+", text.strip())
+    doc = extract_citations_spacy(text)
 
+    wpos = impression_wordpos_count_simple_spacy(doc, n=n, normalize=normalize)
+    wcnt = impression_word_count_simple_spacy(doc, n=n, normalize=normalize)
+    ppos = impression_pos_count_simple_spacy(doc, n=n, normalize=normalize)
 
-def simple_word_tokenize(sentence):
-    """
-    Splits sentence into words using whitespace and basic punctuation.
-    """
-    return re.findall(r"\b\w+\b", sentence)
+    # average only nonzero buckets
+    def avg_percent(arr):
+        nonzero = [x for x in arr if x > 0]
+        if not nonzero:
+            return round((1 / len(arr)) * 100, 2)
+        return round(sum(nonzero) / len(nonzero) * 100, 2)
 
-
-def extract_citations_new(text):
-    """
-    Extracts citation references (like [1], [2]) from each sentence.
-    Returns: list of paragraphs → sentences → (tokens, raw sentence, [citation indices])
-    """
-
-    def extract_from_sentence(sentence):
-        citation_pattern = r"\[[^\w\s]*\d+[^\w\s]*\]"
-        return [int(match) for match in re.findall(r"\d+", sentence)]
-
-    # Naive paragraph splitting
-    paras = re.split(r"\n\s*\n", text.strip())
-    sentences = [simple_sent_tokenize(p) for p in paras]
-
-    return [
-        [(simple_word_tokenize(s), s, extract_from_sentence(s)) for s in paragraph]
-        for paragraph in sentences
-    ]
+    return {
+        "Word+Position": avg_percent(wpos),
+        "Word-only": avg_percent(wcnt),
+        "Position-only": avg_percent(ppos),
+    }
