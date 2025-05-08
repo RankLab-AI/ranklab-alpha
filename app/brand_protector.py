@@ -24,6 +24,7 @@ DEFAULT_RISK_KEYWORDS = [
     "outdated",
 ]
 
+
 # Updated LLM prompt
 def get_venice_response(brand_name: str, model: str = "llama-3.2-3b") -> str:
     prompt = f"""You are a brand intelligence agent. Given a brand name, return structured data about it in the following JSON format.
@@ -109,9 +110,11 @@ def extract_entities(text, labels={"ORG", "PERSON", "GPE"}):
     doc = nlp(text)
     return ", ".join(set(ent.text for ent in doc.ents if ent.label_ in labels)) or "—"
 
+
 def extract_persons(text):
     doc = nlp(text)
     return ", ".join(set(ent.text for ent in doc.ents if ent.label_ == "PERSON")) or "—"
+
 
 # Phrase extraction
 def extract_search_phrases(text, max_phrases=2):
@@ -127,11 +130,13 @@ def extract_search_phrases(text, max_phrases=2):
             break
     return phrases
 
+
 def run_brand_analysis(brand: str, keywords: list[str]) -> list:
     reply = get_venice_response(brand)
 
     # Extract just the description from the JSON string
     import json
+
     try:
         parsed_json = json.loads(reply)
         description = parsed_json.get("description", "").strip()
@@ -150,12 +155,12 @@ def run_brand_analysis(brand: str, keywords: list[str]) -> list:
     risk_summary = ", ".join(risks) if risks else "✅ None"
 
     return [
-        brand,             # 0 Brand
-        summary,           # 1 LLM Summary
-        sentiment_label,   # 2 Sentiment
-        risk_summary,      # 3 Risk Flags
-        keywords_out,      # 4 Keywords
-        entities,          # 5 Entities
-        persons,           # 6 Persons
-        f"{reputation}/100" # 7 Reputation
+        brand,  # 0 Brand
+        summary,  # 1 LLM Summary
+        sentiment_label,  # 2 Sentiment
+        risk_summary,  # 3 Risk Flags
+        keywords_out,  # 4 Keywords
+        entities,  # 5 Entities
+        persons,  # 6 Persons
+        f"{reputation}/100",  # 7 Reputation
     ]
