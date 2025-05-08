@@ -1,11 +1,9 @@
 from os import getenv
-import requests
 import re
 from collections import Counter
 
 from textblob import TextBlob
 import spacy
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from app.generations import openai_client
@@ -26,14 +24,27 @@ DEFAULT_RISK_KEYWORDS = [
     "outdated",
 ]
 
-
+# Updated LLM prompt
 def get_venice_response(brand_name: str, model: str = "llama-3.2-3b") -> str:
+    prompt = f"""You are a brand intelligence agent. Given a brand name, return structured data about it in the following JSON format.
+
+Brand Name: {brand_name}
+
+Respond only in the following JSON format (no explanation or markdown):
+
+{{
+  "brand": "{brand_name}",
+  "description": "<Concise summary of what the brand is, its domain, focus, and relevance>"
+}}
+
+Use the phrase “What is the {brand_name} brand?” as the starting point for the summary.
+Do not include any commentary, code block markers, or extra text outside the JSON object."""
     try:
         response = openai_client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": f"What is {brand_name}?"}],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=1024,
+            max_tokens=512,
             top_p=1,
         )
         return response.choices[0].message.content
@@ -75,7 +86,6 @@ def get_sentiment_label(text):
 
 
 # Reputation score
-# Reputation score
 def calculate_reputation_score(sentiment_score, num_risks, num_sources):
     base = 50
     sentiment_factor = sentiment_score * 25
@@ -99,6 +109,9 @@ def extract_entities(text, labels={"ORG", "PERSON", "GPE"}):
     doc = nlp(text)
     return ", ".join(set(ent.text for ent in doc.ents if ent.label_ in labels)) or "—"
 
+def extract_persons(text):
+    doc = nlp(text)
+    return ", ".join(set(ent.text for ent in doc.ents if ent.label_ == "PERSON")) or "—"
 
 # Phrase extraction
 def extract_search_phrases(text, max_phrases=2):
@@ -114,87 +127,35 @@ def extract_search_phrases(text, max_phrases=2):
             break
     return phrases
 
-
-# DuckDuckGo search
-def search_duckduckgo(query, max_results=3):
-    url = "https://lite.duckduckgo.com/lite/"
-    params = {"q": query}
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        res = requests.get(url, params=params, headers=headers, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        links = []
-        for a in soup.find_all("a", href=True):
-            if a.text and a["href"].startswith("http"):
-                links.append(a["href"])
-            if len(links) >= max_results:
-                break
-        return links
-    except Exception as e:
-        return [f"Search error: {e}"]
-
-
-# Source-checking
-def get_sources(text):
-    phrases = extract_search_phrases(text)
-    sources = []
-    for phrase in phrases:
-        search_results = search_duckduckgo(phrase)
-        if search_results:
-            sources.append(f'Search for "{phrase}":\n  - ' + "\n  - ".join(search_results))
-        else:
-            sources.append(f'No search results found for "{phrase}"')
-    return sources
-
-
-# GNews search (demo key)
-def fetch_news_newsdata(query, max_articles=3):
-    api_key = getenv("NEWSDATA_API_KEY")
-    url = f"https://newsdata.io/api/1/news?apikey={api_key}&q={query}&language=en"
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            return [article["link"] for article in data.get("results", [])[:max_articles]]
-        else:
-            return [f"News error: {response.status_code}"]
-    except Exception as e:
-        return [f"News fetch error: {e}"]
-
-
 def run_brand_analysis(brand: str, keywords: list[str]) -> list:
     reply = get_venice_response(brand)
-    sentiment = TextBlob(reply).sentiment.polarity
-    risks = analyze_risk(reply, keywords)
-    sentiment_label = get_sentiment_label(reply)
-    keywords_out = extract_keywords(reply)
-    entities = extract_entities(reply)
-    sources = get_sources(reply)
-    news_links = fetch_news_newsdata(brand)
-    reputation = calculate_reputation_score(sentiment, len(risks), len(sources))
 
-    summary = reply.strip().replace("\n", " ")[:200] + ("..." if len(reply) > 200 else "")
+    # Extract just the description from the JSON string
+    import json
+    try:
+        parsed_json = json.loads(reply)
+        description = parsed_json.get("description", "").strip()
+    except json.JSONDecodeError:
+        description = reply.strip()
+
+    sentiment = TextBlob(description).sentiment.polarity
+    risks = analyze_risk(description, keywords)
+    sentiment_label = get_sentiment_label(description)
+    keywords_out = extract_keywords(description)
+    entities = extract_entities(description)
+    persons = extract_persons(description)
+    reputation = calculate_reputation_score(sentiment, len(risks), 1)
+
+    summary = description.replace("\n", " ")[:200] + ("..." if len(description) > 200 else "")
     risk_summary = ", ".join(risks) if risks else "✅ None"
 
-    sources_filtered = [s for s in sources if "http" in s]
-    news_filtered = [n for n in news_links if n.startswith("http")]
-
-    has_sources = bool(sources_filtered)
-    has_news = bool(news_filtered)
-
-    sources_summary = "\n".join(sources_filtered)
-    news_summary = "\n".join(news_filtered)
-
     return [
-        brand,  # 0
-        summary,  # 1
-        sentiment_label,  # 2
-        risk_summary,  # 3
-        keywords_out,  # 4
-        entities,  # 5
-        f"{reputation}/100",  # 6
-        sources_summary,  # 7
-        news_summary,  # 8
-        has_sources,  # 9
-        has_news,  # 10
+        brand,             # 0 Brand
+        summary,           # 1 LLM Summary
+        sentiment_label,   # 2 Sentiment
+        risk_summary,      # 3 Risk Flags
+        keywords_out,      # 4 Keywords
+        entities,          # 5 Entities
+        persons,           # 6 Persons
+        f"{reputation}/100" # 7 Reputation
     ]
