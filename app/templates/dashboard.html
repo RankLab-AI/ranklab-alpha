@@ -17,81 +17,64 @@
     <!-- Main content -->
     <main class="flex-auto pa4">
       <div class="flex justify-between items-center mb4">
-        <h2 class="header black-80">Welcome back!</h2>
-        <input type="text" placeholder="Search…" class="pa2 ba b--black-20 br2 w5">
+        <h1 class="text-3xl font-bold">RankLabAI Dashboard</h1>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-md">🔁 Set Weekly Alerts</button>
       </div>
 
-      <!-- Stats overview -->
-      <div class="flex flex-wrap gap2 mb4">
-        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 mr3 card-custom">
-          <h4 class="f5 fw6 black-60 ttu tracked mb2">AI Visibility Score</h4>
-          <div class="flex items-end justify-between">
-            <span class="f1 fw7 black-90">33</span>
-            <span class="f6 fw5 green">+20% MoM</span>
-          </div>
-        </div>
-        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 mr3 card-custom">
-          <h4 class="f5 fw6 black-60 ttu tracked mb2">Pages Passing Compliance</h4>
-          <div class="flex items-end justify-between">
-            <span class="f1 fw7 black-90">12</span>
-            <span class="f6 fw5 green">+33% MoM</span>
-          </div>
-        </div>
-        <div class="w-100 w-30-m w-30-l bg-white pa4 br3 card-custom">
-          <h4 class="f5 fw6 black-60 ttu tracked mb2">Audited Pages</h4>
-          <div class="flex items-end justify-between">
-            <span class="f1 fw7 black-90">40</span>
-            <span class="f6 fw5 green">+8% MoM</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts and tables -->
-      <div class="flex flex-wrap gap3">
-        <div class="w-100 w-60-l bg-white pa3 br3 mr3 mb3 card-custom">
-          <h3 class="f6 black-70 mb2">
-            <span class="material-icons-outlined v-mid mr1">trending_up</span> Visibility Trend
-          </h3>
-          <img src="/static/img/mock-line-chart.png" class="w-100 br2" alt="Line Chart" />
+      <!-- Notifications, Chart, Projects -->
+      <div class="grid grid-cols-3 gap-6 mb4">
+        <div class="bg-white p-4 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-4">Notifications & Insights</h2>
+          <ul class="space-y-2">
+            <li class="text-green-600">✔️ +5 pages optimized this week</li>
+            <li class="text-green-600">📈 Avg. GEO score improved by 12%</li>
+            <li class="text-red-600">🔔 New LLM mention detected for your brand</li>
+            <li class="text-red-600">🔔 Competitor outranking on 3 keywords</li>
+          </ul>
+          <button class="mt-4 bg-gray-200 px-3 py-1 rounded-md text-sm">View All</button>
         </div>
 
-        <div class="w-100 w-35-l bg-white pa3 br3 mb3 card-custom">
-          <h3 class="f6 black-70 mb2">
-            <span class="material-icons-outlined v-mid mr1">pie_chart</span> LLM Traffic Contribution
-          </h3>
-          <table class="f7 w-100 collapse">
-            <thead>
-              <tr class="bb b--black-10">
-                <th class="tl pv2">Source</th>
-                <th class="tr pv2">Sessions</th>
-                <th class="tr pv2">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Google</td><td class="tr">4321</td><td class="tr green">+84%</td></tr>
-              <tr><td>ChatGPT</td><td class="tr">4033</td><td class="tr red">−8%</td></tr>
-              <tr><td>Perplexity</td><td class="tr">3128</td><td class="tr green">+2%</td></tr>
-              <tr><td>Llama</td><td class="tr">2104</td><td class="tr green">+33%</td></tr>
-            </tbody>
-          </table>
+        <div class="bg-white p-4 rounded-xl shadow text-center">
+          <h2 class="text-xl font-semibold mb-4">Total Pages Audited</h2>
+          <div class="h-40 w-40 bg-gray-100 rounded-full mx-auto flex items-center justify-center">[Donut Chart]</div>
+          <div class="mt-2 text-sm">Optimized / Needs Improvement / Not Audited</div>
         </div>
 
-        <div class="w-100 w-40-l bg-white pa3 br3 mr3 card-custom">
-          <h3 class="f6 black-70 mb2">
-            <span class="material-icons-outlined v-mid mr1">link</span> LLM Traffic per Page
-          </h3>
-          <ul class="list pl0 f7">
-            <li class="mb1">URL 1 — <span class="black-60">4321</span> <span class="green">+84%</span></li>
-            <li class="mb1">URL 2 — <span class="black-60">4033</span> <span class="red">−8%</span></li>
-            <li class="mb1">URL 3 — <span class="black-60">3128</span> <span class="green">+2%</span></li>
+        <div class="bg-white p-4 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-4">Recent Actions</h2>
+          <ul class="space-y-2">
+            <li><input type="checkbox" /> Audit blog homepage</li>
+            <li><input type="checkbox" /> Fix low GEO score landing page</li>
+            <li><input type="checkbox" /> Regenerate product descriptions with LLM</li>
+            <li><input type="checkbox" /> Review competitor snippet rankings</li>
+            <li><input type="checkbox" /> Update author schema on 3 articles</li>
           </ul>
         </div>
+      </div>
 
-        <div class="w-100 w-55-l bg-white pa3 br3 card-custom">
-          <h3 class="f6 black-70 mb2">
-            <span class="material-icons-outlined v-mid mr1">insights</span> Yearly AI Mentions
-          </h3>
-          <img src="/static/img/mock-bar-chart.png" class="w-100 br2" alt="Bar Chart" />
+      <!-- Trends -->
+      <div class="bg-white p-4 rounded-xl shadow mb4">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold">GEO & SEO Score Trends</h2>
+          <select class="border px-2 py-1 rounded-md text-sm">
+            <option>Last 7 days</option>
+            <option>Last 30 days</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div class="h-64 bg-gray-100 flex items-center justify-center">[Line Graph: You vs Competitor]</div>
+      </div>
+
+      <!-- Bottom Tools -->
+      <div class="grid grid-cols-3 gap-6 mb4">
+        <div class="bg-white p-4 rounded-xl shadow text-center">
+          <button class="bg-orange-100 text-orange-700 w-full py-3 rounded text-lg font-semibold">🟠 Brand Protector</button>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow text-center">
+          <button class="bg-green-100 text-green-700 w-full py-3 rounded text-lg font-semibold">🟢 Content Doctor</button>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow text-center">
+          <button class="bg-purple-100 text-purple-700 w-full py-3 rounded text-lg font-semibold">🟣 Content Writer</button>
         </div>
       </div>
     </main>
