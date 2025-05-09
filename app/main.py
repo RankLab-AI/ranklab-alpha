@@ -1,7 +1,6 @@
 import os
 from json import loads
 import logging
-from typing import Dict, Union
 from app.query_search import run_query_search as execute_search
 
 from fastapi import FastAPI, Request, HTTPException, Form
@@ -161,7 +160,7 @@ async def analyze(request: Request, content: str = Form(...)):
     # 2) Compute all eight metrics in one go
     try:
         logging.debug(f"Computing GEO metrics for content length {len(content)}")
-        scores = compute_scores(content, n=5, normalize=True)
+        scores = compute_scores(content, normalize=False)
         logging.debug(f"Computed scores: {scores}")
     except Exception as e:
         logging.error(f"Error computing scores: {e}")
