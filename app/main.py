@@ -12,12 +12,7 @@ from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
 from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
-from app.scoring import (
-    impression_wordpos_count_simple_spacy,
-    impression_word_count_simple_spacy,
-    impression_pos_count_simple_spacy,
-    extract_citations_spacy,
-)
+from app.scoring import compute_scores
 
 from app.utils import (
     verify_firebase_token,
@@ -152,65 +147,35 @@ def content_doctor_page(request: Request):
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def analyze(request: Request, content: str = Form(...)):
-    # Input validation
-    if not content or len(content.strip()) == 0:
+    # 1) Input validation
+    if not content or not content.strip():
         return HTMLResponse(
             "<div class='red f6'>Error: Content cannot be empty</div>", status_code=400
         )
-
-    if len(content) > 50000:  # Example max length
+    if len(content) > 50_000:
         return HTMLResponse(
             "<div class='red f6'>Error: Content too long (max 50000 characters)</div>",
             status_code=400,
         )
 
+    # 2) Compute all eight metrics in one go
     try:
-        # Parse content
-        logging.debug(f"Analyzing content of length: {len(content)}")
-        parsed = extract_citations_spacy(content)
-
-        if not parsed:
-            logging.warning("Failed to parse content")
-            return HTMLResponse(
-                "<div class='red f6'>Error: Unable to parse content</div>", status_code=400
-            )
-
-        logging.debug(f"Successfully parsed content: {parsed[:100]}...")  # Log first 100 chars
-        n = 5
-
-        def avg_score(raw):
-            non_zero = [x for x in raw if x > 0]
-            if not non_zero:
-                return round((1 / len(raw)) * 100, 2)
-            return round(sum(non_zero) / len(non_zero) * 100, 2)
-
-        # Calculate scores with error handling
-        try:
-            scores: Dict[str, float] = {
-                "Word+Position": avg_score(impression_wordpos_count_simple_spacy(parsed, n)),
-                "Word-only": avg_score(impression_word_count_simple_spacy(parsed, n)),
-                "Position-only": avg_score(impression_pos_count_simple_spacy(parsed, n)),
-            }
-            logging.debug(f"Calculated scores: {scores}")
-        except Exception as e:
-            logging.error(f"Error calculating scores: {e}")
-            return HTMLResponse(
-                "<div class='red f6'>Error calculating scores</div>", status_code=500
-            )
-
-        return templates.TemplateResponse(
-            "content_doctor.html",
-            {
-                "request": request,
-                "content": content,
-                "scores": scores,
-            },
-        )
+        logging.debug(f"Computing GEO metrics for content length {len(content)}")
+        scores = compute_scores(content, n=5, normalize=True)
+        logging.debug(f"Computed scores: {scores}")
     except Exception as e:
-        logging.error(f"Unexpected error in analyze route: {e}")
-        return HTMLResponse(
-            "<div class='red f6'>An unexpected error occurred</div>", status_code=500
-        )
+        logging.error(f"Error computing scores: {e}")
+        return HTMLResponse("<div class='red f6'>Error calculating scores</div>", status_code=500)
+
+    # 3) Render the same template, passing along the full `scores` dict
+    return templates.TemplateResponse(
+        "content_doctor.html",
+        {
+            "request": request,
+            "content": content,
+            "scores": scores,
+        },
+    )
 
 
 @app.get("/brand-protector", response_class=HTMLResponse)
