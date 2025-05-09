@@ -1,4 +1,4 @@
-# File: app/scoring.py
+# app/scoring.py
 
 from typing import Dict, List
 from .metrics import (
@@ -14,53 +14,60 @@ from .metrics import (
 )
 
 
-def _avg_percent(arr: List[float]) -> float:
+def compute_scores(text: str, normalize: bool = True) -> Dict[str, float]:
     """
-    Average only the non-zero buckets; if all zero, return uniform 100/len(arr).
+    Parse `text`, extract citations via spaCy, then compute
+    eight GEO-style metrics over however many citations you actually have.
     """
-    nonzero = [x for x in arr if x > 0]
-    if not nonzero:
-        return round(100.0 / len(arr), 2)
-    return round(sum(nonzero) / len(nonzero) * 100, 2)
-
-
-def compute_scores(text: str, n: int = 5, normalize: bool = True) -> Dict[str, float]:
-    """
-    Parse `text`, extract citations via spaCy, then compute eight GEO‐style metrics:
-      - Word+Position
-      - Word-only
-      - Position-only
-      - Relevance
-      - Influence
-      - Diversity
-      - Uniqueness
-      - Follow‐Up
-
-    Returns each as a percentage.
-    """
-    # 1) Extract citation‐annotated Doc
+    # 1) Extract citation-annotated Doc
     doc = extract_citations_spacy(text)
 
-    # 2) Compute the three simple metrics
+    # 2) Count how many distinct citation IDs we have
+    all_cites = [c for para in doc for (_, _, cites) in para for c in cites]
+    n = max(all_cites) if all_cites else 0
+
+    if n == 0:
+        # no citations → zero out every metric
+        return {
+            m: 0.0
+            for m in [
+                "Word+Position",
+                "Word-only",
+                "Position-only",
+                "Relevance",
+                "Influence",
+                "Diversity",
+                "Uniqueness",
+                "Follow-Up",
+            ]
+        }
+
+    # 3) Simple GEO metrics
     wpos = impression_wordpos_count_simple_spacy(doc, n=n, normalize=normalize)
     wcnt = impression_word_count_simple_spacy(doc, n=n, normalize=normalize)
     ppos = impression_pos_count_simple_spacy(doc, n=n, normalize=normalize)
 
-    # 3) Compute the five detailed GEO impressions (for citation #1 by default, returns per‐citation list)
-    #    We then average across non‐zero buckets to get a single percent.
-    rel = impression_relevance_sm_spacy(doc, text, n=n, normalize=normalize, idx=0)
-    infl = impression_influence_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
-    div = impression_diversity_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
-    uniq = impression_uniqueness_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
-    foll = impression_follow_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
+    # 4) Detailed GEO impressions (we anchor all of them to citation #1)
+    rel = impression_relevance_sm_spacy(doc, text, n=n, normalize=normalize)
+    infl = impression_influence_detailed_spacy(doc, text, n=n, normalize=normalize)
+    div = impression_diversity_detailed_spacy(doc, text, n=n, normalize=normalize)
+    uniq = impression_uniqueness_detailed_spacy(doc, text, n=n, normalize=normalize)
+    foll = impression_follow_detailed_spacy(doc, text, n=n, normalize=normalize)
+
+    # helper to average only the non-zero buckets
+    def _pct_of_bucket(scores: List[float], idx: int = 0, perc=False) -> float:
+        """
+        Take the normalized score for bucket `idx` and turn it into a percentage.
+        """
+        return scores[idx] * 100.0 if perc else scores[idx]
 
     return {
-        "Word+Position": _avg_percent(wpos),
-        "Word-only": _avg_percent(wcnt),
-        "Position-only": _avg_percent(ppos),
-        "Relevance": _avg_percent(rel),
-        "Influence": _avg_percent(infl),
-        "Diversity": _avg_percent(div),
-        "Uniqueness": _avg_percent(uniq),
-        "Follow-Up": _avg_percent(foll),
+        "Word+Position": _pct_of_bucket(wpos),
+        "Word-only": _pct_of_bucket(wcnt),
+        "Position-only": _pct_of_bucket(ppos, perc=True),
+        "Relevance": _pct_of_bucket(rel),
+        "Influence": _pct_of_bucket(infl),
+        "Diversity": _pct_of_bucket(div, perc=True),
+        "Uniqueness": _pct_of_bucket(uniq, perc=True),
+        "Follow-Up": _pct_of_bucket(foll),
     }
