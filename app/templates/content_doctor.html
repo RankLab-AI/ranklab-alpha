@@ -5,6 +5,7 @@
   <title>Content Doctor – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="/static/img/icon.png" />
+  <link rel="icon" type="image/png" href="/static/img/favicon.png" />
   <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
@@ -17,7 +18,7 @@
 
     <!-- Main content -->
     <main class="flex-auto pa4">
-      <div class="flex justify-between items-center mb4">
+      <div class="mb4">
         <h2 class="header black-80">🩺 Content Doctor (Demo)</h2>
         <span class="f6 gray">Paste any content and get immediate scoring.</span>
       </div>
@@ -30,26 +31,50 @@
           class="w-100 pa3 ba b--black-20 br3 bg-white mb3" 
           required>{{ content or '' }}</textarea>
 
-        <button 
-          type="submit" 
-          class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
-          Analyze Content
-        </button>
+        {# only show the Analyze button if we haven't scored yet #}
+        {% if not scores %}
+          <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
+            Analyze Content
+          </button>
+        {% endif %}
       </form>
 
-    {% if scores %}
-      <div class="mt4">
-        <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
-        <div class="flex flex-wrap gap2">
-          {% for label, value in scores.items() %}
-            <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
-              <div class="f6 black-70">{{ label }}</div>
-              <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
-            </div>
-          {% endfor %}
+      {% if scores %}
+        {% set items = scores.items() | list %}
+        <div class="mt4">
+          <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
+          
+          <!-- First row: first 4 metrics -->
+          <div class="flex flex-wrap gap2 mb3">
+            {% for label, value in items[:4] %}
+              <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
+                <div class="f6 black-70">{{ label }}</div>
+                <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
+              </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Second row: remaining metrics -->
+          <div class="flex flex-wrap gap2 mb4">
+            {% for label, value in items[4:] %}
+              <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
+                <div class="f6 black-70">{{ label }}</div>
+                <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Optimize button -->
+          <div class="mt3">
+            <form method="post" action="/optimize">
+              <input type="hidden" name="content" value="{{ content|e }}" />
+              <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
+                Optimize Content
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-    {% endif %}
+      {% endif %}
     </main>
   </div>
 </body>
