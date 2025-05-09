@@ -2,7 +2,7 @@ import os
 from json import loads
 import logging
 from typing import Dict, Union
-from app.utils.query_search import run_query_search
+from app.query_search import run_query_search
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -251,7 +251,7 @@ async def query_search_page(request: Request):
 
 @app.post("/query-search", response_class=HTMLResponse)
 async def run_query_search(request: Request, topic: str = Form(...)):
-    from app.utils.query_search import run_query_search as execute_search
+    from app.query_search import run_query_search as execute_search
     try:
         result = execute_search(topic)
         return templates.TemplateResponse("query_search.html", {
@@ -264,6 +264,21 @@ async def run_query_search(request: Request, topic: str = Form(...)):
         return templates.TemplateResponse("query_search.html", {
             "request": request,
             "error": f"Failed to fetch queries: {str(e)}"
+        })
+    
+@app.post("/predict-traffic", response_class=HTMLResponse)
+async def handle_query_search(request: Request, content: str = Form(...), topic: str = Form(...)):
+    try:
+        from app.traffic_predictor import predict_llm_traffic
+        result = predict_llm_traffic(content, topic)
+        return templates.TemplateResponse("traffic_predictor.html", {
+            "request": request,
+            "result": result
+        })
+    except Exception as e:
+        return templates.TemplateResponse("traffic_predictor.html", {
+            "request": request,
+            "error": f"Failed to generate prediction: {str(e)}"
         })
 
 
