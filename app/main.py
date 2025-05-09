@@ -226,6 +226,49 @@ async def run_query_search(request: Request, topic: str = Form(...)):
         )
 
 
+@app.post("/optimize", response_class=HTMLResponse)
+async def redirect_to_lab(request: Request, content: str = Form(...)):
+    """
+    When the user clicks “Optimize Content” we forward them
+    to /content-lab with the submitted text.
+    """
+    return templates.TemplateResponse(
+        "content_lab.html",
+        {
+            "request": request,
+            "content": content,
+            # no scores here, we’re in the lab phase
+        },
+    )
+
+
+@app.post("/content-lab", response_class=HTMLResponse)
+async def content_lab_page(
+    request: Request,
+    content: str = Form(...),
+):
+    """
+    Dispatch to your optimization logic based on `method`.
+    For now, we just echo back with a stub marker.
+    """
+    # Define available methods here
+    available_methods = [
+        "Keyword Stuffing",
+        "Quotation Addition",
+        "Stats Addition",
+        "Fluency Optimization",
+    ]
+
+    return templates.TemplateResponse(
+        "content_lab.html",
+        {
+            "request": request,
+            "content": content,
+            "methods": available_methods,
+        },
+    )
+
+
 # 💻 Local dev command
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
