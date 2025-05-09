@@ -50,7 +50,7 @@ def compute_scores(text: str, n: int = 5, normalize: bool = True) -> Dict[str, f
     #    We then average across non‐zero buckets to get a single percent.
     rel = impression_relevance_sm_spacy(doc, text, n=n, normalize=normalize, idx=0)
     infl = impression_influence_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
-    div = impression_diversity_detailed(doc, text, n=n, normalize=normalize, idx=0)
+    div = impression_diversity_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
     uniq = impression_uniqueness_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
     foll = impression_follow_detailed_spacy(doc, text, n=n, normalize=normalize, idx=0)
 
