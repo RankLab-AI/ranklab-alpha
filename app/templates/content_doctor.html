@@ -24,11 +24,11 @@
       </div>
 
       <form method="post" action="/analyze" id="contentForm">
-        <textarea 
-          name="content" 
-          placeholder="Paste your content here…" 
-          rows="14" 
-          class="w-100 pa3 ba b--black-20 br3 bg-white mb3" 
+        <textarea
+          name="content"
+          placeholder="Paste your content here…"
+          rows="14"
+          class="w-100 pa3 ba b--black-20 br3 bg-white mb3"
           required>{{ content or '' }}</textarea>
 
         {# only show the Analyze button if we haven't scored yet #}
@@ -43,7 +43,7 @@
         {% set items = scores.items() | list %}
         <div class="mt4">
           <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
-          
+
           <!-- First row: first 4 metrics -->
           <div class="flex flex-wrap gap2 mb3">
             {% for label, value in items[:4] %}
@@ -53,7 +53,7 @@
               </div>
             {% endfor %}
           </div>
-          
+
           <!-- Second row: remaining metrics -->
           <div class="flex flex-wrap gap2 mb4">
             {% for label, value in items[4:] %}
@@ -66,7 +66,8 @@
 
           <!-- Optimize button -->
           <div class="mt3">
-            <form method="post" action="/optimize">
+            <form method="post" action="/content-lab">
+              <!-- carry over the entire text area value -->
               <input type="hidden" name="content" value="{{ content|e }}" />
               <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
                 Optimize Content
