@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
-from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
+# from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
 from app.scoring import compute_scores
 
 from app.utils import (
