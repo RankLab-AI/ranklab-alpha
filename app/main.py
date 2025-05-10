@@ -1,7 +1,7 @@
 import os
 from json import loads
 import logging
-from app.query_search import run_query_search as execute_search
+from app.query_research import run_query_search as execute_search
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
