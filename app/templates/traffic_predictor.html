@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LLM Traffic Predictor – RankLab AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/img/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+</head>
+
+<body class="bg-near-white">
+  <div class="flex" style="min-height:100vh; align-items: stretch;">
+    <!-- Sidebar -->
+    <aside class="sidebar bg-white pa3 shadow-card" style="width:18rem; flex-shrink:0;">
+      {% include "partials/sidebar.html" %}
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-auto pa4">
+      <div class="mb4">
+        <h2 class="header black-80">📈 LLM Traffic Predictor</h2>
+        <span class="f6 gray db mb4">See how often your content could be used by AI assistants like ChatGPT, Gemini, or Perplexity.</span>
+      </div>
+
+      {% if error %}
+        <div class="red f5 mb4">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="/predict-traffic" class="mb4">
+        <div class="mb3">
+          <label for="topic" class="f5 db mb2">Enter Topic</label>
+          <input
+            type="text"
+            name="topic"
+            id="topic"
+            placeholder="e.g., ‘AI SEO’"
+            required
+            class="w-100 pa2 br2 b--black-20"
+          />
+        </div>
+        <div class="mb4">
+          <label for="content" class="f5 db mb2">Paste Content</label>
+          <textarea
+            name="content"
+            id="content"
+            rows="8"
+            required
+            class="w-100 pa2 br2 b--black-20"
+          ></textarea>
+        </div>
+        <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray w-100">
+          Predict Traffic
+        </button>
+      </form>
+
+      <div id="results" class="mt4">
+        {% if result %}
+          <div class="bg-white pa4 br3 shadow-card">
+            <h3 class="f4 fw6 mb3">Traffic Prediction for “{{ result.topic }}”</h3>
+            <p class="mb2"><strong>Estimated Monthly AI Citations:</strong> {{ result.estimated_monthly_citations }}</p>
+            <p class="mb4"><strong>Top Query:</strong> “{{ result.top_query }}”</p>
+
+            <div class="mb4">
+              <h5 class="f5 fw6 mb2">Query vs. Citation Likelihood</h5>
+              <canvas id="queryChart" width="600" height="300"></canvas>
+            </div>
+
+            <div class="mb4">
+              <h5 class="f5 fw6 mb2">Visibility Trend Over Time</h5>
+              <canvas id="visibilityTrend" width="600" height="300"></canvas>
+            </div>
+
+            <div>
+              <h5 class="f5 fw6 mb2">Who Gets Cited Most?</h5>
+              <canvas id="sourceChart" width="600" height="300"></canvas>
+            </div>
+          </div>
+
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+            // Bar Chart
+            new Chart(document.getElementById('queryChart'), {
+              type: 'bar',
+              data: {
+                labels: {{ result.queries|tojson }},
+                datasets: [{
+                  label: 'Citation Score',
+                  data: {{ result.scores|tojson }},
+                  backgroundColor: '#007BFF'
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  title: { display: false }
+                },
+                scales: {
+                  y: { beginAtZero: true, title: { display: true, text: 'Score' } }
+                }
+              }
+            });
+
+            // Line Chart
+            new Chart(document.getElementById('visibilityTrend'), {
+              type: 'line',
+              data: {
+                labels: ["Week 1","Week 2","Week 3","Week 4"],
+                datasets: [{
+                  label: 'Visibility',
+                  data: [{{ result.scores[0] }},{{ result.scores[1] }},{{ result.scores[2] }},{{ result.scores[0] }}],
+                  borderColor: '#28a745',
+                  tension: 0.3,
+                  fill: false
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  title: { display: false }
+                },
+                scales: {
+                  y: { beginAtZero: true }
+                }
+              }
+            });
+
+            // Pie Chart
+            new Chart(document.getElementById('sourceChart'), {
+              type: 'pie',
+              data: {
+                labels: {{ result.source_labels|tojson }},
+                datasets: [{
+                  data: {{ result.source_values|tojson }},
+                  backgroundColor: ['#007BFF','#6c757d','#28a745','#ffc107','#dc3545']
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'right' }
+                }
+              }
+            });
+          </script>
+        {% else %}
+          <div class="gray f6">No results yet. Submit above to see predictions.</div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>
