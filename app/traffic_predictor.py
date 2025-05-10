@@ -1,8 +1,7 @@
 from typing import List, Dict, Union
 from collections import Counter
 import random
-from app.scoring import extract_citations_new
-from app.metrics import impression_wordpos_count_simple
+from app.metrics import extract_citations_spacy, impression_wordpos_count_simple_spacy
 
 
 # Mock function to simulate related queries from LLM
@@ -48,17 +47,19 @@ def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str
     ]
 
 
-# Simulate citation score generation
 def calculate_citation_scores(content: str) -> List[float]:
-    """Uses metrics from metrics.py to generate citation likelihood scores"""
+    """Extract citations via spaCy and score with word+position metric."""
     try:
-        parsed = extract_citations_new(content)
-        n = 5
-        scores = [round(score * 100, 2) for score in impression_wordpos_count_simple(parsed, n)]
-        return scores
+        doc = extract_citations_spacy(content)
+        # Flatten all cites to get max citation number
+        all_cites = [c for para in doc for (_, _, cites) in para for c in cites]
+        n = max(all_cites) if all_cites else 1
+        raw = impression_wordpos_count_simple_spacy(doc, n=n, normalize=True)
+        return [round(s * 100, 2) for s in raw]
     except Exception as e:
-        print(f"[!] Error calculating scores: {e}")
-        return [random.randint(60, 90) for _ in range(5)]
+        print(f"[!] Error calculating citation scores: {e}")
+        # fallback mock
+        return [round(random.uniform(50, 90), 2) for _ in range(5)]
 
 
 # Simulate source distribution (who gets cited most?)
@@ -139,17 +140,3 @@ def generate_mock_trend(scores: List[float]) -> List[int]:
         int(base_score * 1.0),
     ]
     return trend_data
-
-
-# Helper: Wrap scoring logic
-def calculate_citation_scores(content: str) -> List[float]:
-    """Wrapper to extract citation-based scores using metrics"""
-    try:
-        parsed = extract_citations_new(content)
-        n = 5
-        raw_scores = impression_wordpos_count_simple(parsed, n=n)
-        scaled_scores = [round(s * 100, 2) for s in raw_scores]
-        return scaled_scores
-    except Exception as e:
-        print(f"[!] Error calculating citation scores: {e}")
-        return [random.uniform(50, 90) for _ in range(5)]
