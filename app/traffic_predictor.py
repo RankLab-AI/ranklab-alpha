@@ -17,22 +17,22 @@ def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str
             "How does AI affect traditional SEO?",
             "Will AI replace SEO specialists?",
             "Best practices for optimizing content for ChatGPT",
-            "How to rank in Perplexity AI"
+            "How to rank in Perplexity AI",
         ],
         "Generative Engine Optimization": [
             "What is Generative Engine Optimization?",
             "How to optimize content for LLM search engines",
             "Difference between GEO and SEO",
             "How to write for AI assistants like Gemini",
-            "Why should I care about AI-powered search?"
+            "Why should I care about AI-powered search?",
         ],
         "RankLab AI": [
             "What is RankLab AI?",
             "How does RankLab help with AI-readiness?",
             "Is RankLab better than SurferSEO for AI?",
             "Can I integrate RankLab with WordPress?",
-            "Does RankLab offer API access?"
-        ]
+            "Does RankLab offer API access?",
+        ],
     }
 
     if topic in mock_query_map:
@@ -44,7 +44,7 @@ def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str
         f"How does {topic} work?",
         f"Why should I use {topic}?",
         f"Best practices for {topic}",
-        f"{topic} vs alternatives"
+        f"{topic} vs alternatives",
     ]
 
 
@@ -69,36 +69,33 @@ def get_source_distribution(topic: str) -> Dict[str, int]:
             "ai-search.org": 40,
             "chatgpt-insights.blog": 30,
             "seo-journal.com": 20,
-            "futureofwork.ai": 10
+            "futureofwork.ai": 10,
         },
         "Generative Engine Optimization": {
             "geoseo.org": 50,
             "ranklab.ai": 30,
             "ai-content-hub.io": 15,
-            "chatbotweekly.net": 5
+            "chatbotweekly.net": 5,
         },
         "RankLab AI": {
             "ranklab.ai": 70,
             "chatgpt-insights.blog": 15,
             "seo-journal.com": 10,
-            "ai-reviewhub.org": 5
-        }
+            "ai-reviewhub.org": 5,
+        },
     }
 
     if topic in mock_sources:
         return mock_sources[topic]
 
     # Fallback default sources
-    return {
-        "Source A": 45,
-        "Source B": 30,
-        "Source C": 15,
-        "Source D": 10
-    }
+    return {"Source A": 45, "Source B": 30, "Source C": 15, "Source D": 10}
 
 
 # Main predictor function used by FastAPI route
-def predict_llm_traffic(content: str, topic: str, num_queries: int = 5) -> Dict[str, Union[str, int, float, List]]:
+def predict_llm_traffic(
+    content: str, topic: str, num_queries: int = 5
+) -> Dict[str, Union[str, int, float, List]]:
     """
     Predicts how much AI-driven traffic a piece of content could receive
     Returns structured data for visualization in Jinja2 template
@@ -128,7 +125,7 @@ def predict_llm_traffic(content: str, topic: str, num_queries: int = 5) -> Dict[
         "source_values": list(source_distribution.values()),
         "visibility_trend": generate_mock_trend(scores),
         "estimated_monthly_citations": estimated_monthly_citations,
-        "top_query": top_query
+        "top_query": top_query,
     }
 
 
@@ -139,7 +136,7 @@ def generate_mock_trend(scores: List[float]) -> List[int]:
         int(base_score * 0.6),
         int(base_score * 0.8),
         int(base_score * 0.95),
-        int(base_score * 1.0)
+        int(base_score * 1.0),
     ]
     return trend_data
 
