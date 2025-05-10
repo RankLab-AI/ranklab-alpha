@@ -1,166 +1,152 @@
-from os import getenv
-import re
-from collections import Counter
-
-from textblob import TextBlob
-import spacy
+import os
+import json
+import requests
+import time
 from dotenv import load_dotenv
-
-from app.generations import openai_client
+from rich import print
+from rich.console import Console
+from rich.table import Table
+from rich.prompt import Prompt
 
 load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+console = Console()
 
-# Default risk keywords
-DEFAULT_RISK_KEYWORDS = [
-    "scam",
-    "lawsuit",
-    "fraud",
-    "controversial",
-    "fake",
-    "not trustworthy",
-    "outdated",
-]
+def get_groq_response(brand_name, model="llama3-70b-8192"):
+    if not GROQ_API_KEY:
+        raise EnvironmentError("❌ GROQ_API_KEY is not set in your .env file.")
 
-
-# Updated LLM prompt
-def get_venice_response(brand_name: str, model: str = "llama-3.2-3b") -> str:
-    prompt = f"""You are a brand intelligence agent. Given a brand name, return structured data about it in the following JSON format.
-
-Brand Name: {brand_name}
-
-Respond only in the following JSON format (no explanation or markdown):
+    prompt = f"""
+You are an expert branding analyst. Analyze the brand "{brand_name}" and return the results in this exact JSON format:
 
 {{
   "brand": "{brand_name}",
-  "description": "<Concise summary of what the brand is, its domain, focus, and relevance>"
+  "description": "What is the {brand_name} brand?",
+  "offerings": "What does {brand_name} offer?",
+  "criticisms": "What are common criticisms of {brand_name}?",
+  "alternatives": "What are alternatives to {brand_name}?"
 }}
+Only respond with the JSON.
+"""
 
-Use the phrase “What is the {brand_name} brand?” as the starting point for the summary.
-Do not include any commentary, code block markers, or extra text outside the JSON object."""
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7
+    }
+
+    response = requests.post(GROQ_API_URL, headers=headers, json=payload)
+
     try:
-        response = openai_client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=512,
-            top_p=1,
+        response.raise_for_status()
+        resp_json = response.json()
+        content = resp_json.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+
+        if not content:
+            raise ValueError("Empty content received from LLM")
+
+        return json.loads(content)
+
+    except (json.JSONDecodeError, ValueError) as e:
+        return {
+            "brand": brand_name,
+            "description": f"⚠️ Error: {str(e)}",
+            "offerings": "⚠️",
+            "criticisms": "⚠️",
+            "alternatives": "⚠️"
+        }
+
+def extract_keywords(text):
+    return list(set(word.strip(".,!?").lower() for word in text.split() if len(word) > 4))
+
+def summarize_brand(brand_data):
+    description = brand_data.get("description", "")
+    keywords = extract_keywords(description)
+    return {
+        "brand": brand_data.get("brand"),
+        "summary": description,
+        "keywords": ", ".join(keywords),
+        "offerings": brand_data.get("offerings", "⚠️"),
+        "criticisms": brand_data.get("criticisms", "⚠️"),
+        "alternatives": brand_data.get("alternatives", "⚠️")
+    }
+
+def display_results(brands_info):
+    table = Table(title="Brand Summary Comparison", show_lines=True)
+    table.add_column("Brand", style="cyan", no_wrap=True)
+    table.add_column("LLM Summary")
+    table.add_column("Keywords")
+    table.add_column("Offerings")
+    table.add_column("Criticisms")
+    table.add_column("Alternatives")
+
+    for info in brands_info:
+        table.add_row(
+            info["brand"],
+            info["summary"],
+            info["keywords"],
+            info["offerings"],
+            info["criticisms"],
+            info["alternatives"]
         )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Error from Venice: {e}"
+    console.print(table)
 
+def main():
+    print("[bold green]=== BrandGuard: LLM Insight Tool ===[/bold green]\n")
 
-# Get custom risk keywords
-def get_custom_keywords():
-    user_input = input("Add custom risk keywords (comma-separated, leave blank for default): ")
-    if user_input.strip():
-        return DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in user_input.split(",")]
-    return DEFAULT_RISK_KEYWORDS
+    brand = Prompt.ask("Enter your brand").strip()
+    competitors = Prompt.ask("Enter competitors (comma-separated)").strip().split(",")
 
+    all_brands = [brand] + [c.strip() for c in competitors if c.strip()]
+    all_infos = []
 
-# Analyze sentiment and risk
-def analyze_risk(text, keywords):
-    risks = []
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    if polarity < -0.2:
-        risks.append("⚠️ Negative tone")
-    for keyword in keywords:
-        if keyword in text.lower():
-            risks.append(f"⚠️ '{keyword}'")
-    return risks
+    for b in all_brands:
+        print(f"\n🔍 Querying GROQ for: [yellow]{b}[/yellow]...\n")
+        result = get_groq_response(b)
+        brand_info = summarize_brand(result)
+        all_infos.append(brand_info)
+        time.sleep(2)
 
+    print("\n[bold green]=== Brand Summary Comparison ===[/bold green]\n")
+    display_results(all_infos)
 
-# Sentiment label
-def get_sentiment_label(text):
-    blob = TextBlob(text)
-    score = blob.sentiment.polarity
-    if score > 0.2:
-        return f"Positive ({score:.2f})"
-    elif score < -0.2:
-        return f"Negative ({score:.2f})"
-    else:
-        return f"Neutral ({score:.2f})"
+    print("\n[bold blue]=== Optional: Generate llm.txt file to guide LLM bots ===[/bold blue]")
+    generate_llm = Prompt.ask("Would you like to generate a llm.txt file? (yes/no)", default="no").strip().lower()
 
+    if generate_llm == "yes":
+        agents = Prompt.ask("Enter target LLMs (comma-separated, e.g., ChatGPT,Gemini)", default="ChatGPT").split(",")
+        allow_paths = Prompt.ask("Paths to ALLOW (comma-separated)", default="/").split(",")
+        disallow_paths = Prompt.ask("Paths to DISALLOW (comma-separated)", default="/private/").split(",")
+        cite_as = Prompt.ask("Canonical citation URL (optional)", default="").strip()
+        policy = Prompt.ask("Policy (summary, no-summary, citation-required, no-training)", default="citation-required").strip()
 
-# Reputation score
-def calculate_reputation_score(sentiment_score, num_risks, num_sources):
-    base = 50
-    sentiment_factor = sentiment_score * 25
-    risk_penalty = num_risks * 5
-    source_boost = num_sources * 2
-    reputation = max(0, min(100, base + sentiment_factor - risk_penalty + source_boost))
-    return round(reputation, 2)  # Round to 2 decimal places
+        llm_txt = ""
+        for agent in agents:
+            llm_txt += f"User-agent: {agent.strip()}\n"
+            for path in allow_paths:
+                llm_txt += f"Allow: {path.strip()}\n"
+            for path in disallow_paths:
+                llm_txt += f"Disallow: {path.strip()}\n"
+            if cite_as:
+                llm_txt += f"Cite-as: {cite_as}\n"
+            if policy:
+                llm_txt += f"Policy: {policy}\n"
+            llm_txt += "\n"
 
+        with open("llm.txt", "w") as f:
+            f.write(llm_txt)
 
-# Keyword extraction
-def extract_keywords(text, max_keywords=5):
-    doc = nlp(text)
-    keywords = [token.text for token in doc if token.pos_ in ("NOUN", "PROPN")]
-    keyword_freq = Counter(keywords)
-    most_common = keyword_freq.most_common(max_keywords)
-    return ", ".join([kw for kw, _ in most_common]) if most_common else "—"
+        print("\n[bold green]✅ llm.txt file generated and saved in the current directory.[/bold green]")
 
-
-# Entity extraction
-def extract_entities(text, labels={"ORG", "PERSON", "GPE"}):
-    doc = nlp(text)
-    return ", ".join(set(ent.text for ent in doc.ents if ent.label_ in labels)) or "—"
-
-
-def extract_persons(text):
-    doc = nlp(text)
-    return ", ".join(set(ent.text for ent in doc.ents if ent.label_ == "PERSON")) or "—"
-
-
-# Phrase extraction
-def extract_search_phrases(text, max_phrases=2):
-    # Extract proper noun phrases (e.g., company names, people)
-    candidates = re.findall(r"\b(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b", text)
-    seen = set()
-    phrases = []
-    for phrase in candidates:
-        if phrase not in seen:
-            phrases.append(phrase)
-            seen.add(phrase)
-        if len(phrases) >= max_phrases:
-            break
-    return phrases
-
-
-def run_brand_analysis(brand: str, keywords: list[str]) -> list:
-    reply = get_venice_response(brand)
-
-    # Extract just the description from the JSON string
-    import json
-
-    try:
-        parsed_json = json.loads(reply)
-        description = parsed_json.get("description", "").strip()
-    except json.JSONDecodeError:
-        description = reply.strip()
-
-    sentiment = TextBlob(description).sentiment.polarity
-    risks = analyze_risk(description, keywords)
-    sentiment_label = get_sentiment_label(description)
-    keywords_out = extract_keywords(description)
-    entities = extract_entities(description)
-    persons = extract_persons(description)
-    reputation = calculate_reputation_score(sentiment, len(risks), 1)
-
-    summary = description.replace("\n", " ")[:200] + ("..." if len(description) > 200 else "")
-    risk_summary = ", ".join(risks) if risks else "✅ None"
-
-    return [
-        brand,  # 0 Brand
-        summary,  # 1 LLM Summary
-        sentiment_label,  # 2 Sentiment
-        risk_summary,  # 3 Risk Flags
-        keywords_out,  # 4 Keywords
-        entities,  # 5 Entities
-        persons,  # 6 Persons
-        f"{reputation}/100",  # 7 Reputation
-    ]
+if __name__ == "__main__":
+    main()
