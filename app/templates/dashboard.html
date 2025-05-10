@@ -13,71 +13,166 @@
 <body class="bg-near-white">
   <div class="flex">
     {% include "partials/sidebar.html" %}
-
-    <!-- Main content -->
     <main class="flex-auto pa4">
       <div class="flex justify-between items-center mb4">
-        <h1 class="text-3xl font-bold">RankLabAI Dashboard</h1>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-md">🔁 Set Weekly Alerts</button>
+        <h1 class="f3 fw6">RankLabAI Dashboard</h1>
+        <button class="br2 ph3 pv2 bg-blue white b--blue">🔁 Set Weekly Alerts</button>
       </div>
 
-      <!-- Notifications, Chart, Projects -->
-      <div class="grid grid-cols-3 gap-6 mb4">
-        <div class="bg-white p-4 rounded-xl shadow">
-          <h2 class="text-xl font-semibold mb-4">Notifications & Insights</h2>
-          <ul class="space-y-2">
-            <li class="text-green-600">✔️ +5 pages optimized this week</li>
-            <li class="text-green-600">📈 Avg. GEO score improved by 12%</li>
-            <li class="text-red-600">🔔 New LLM mention detected for your brand</li>
-            <li class="text-red-600">🔔 Competitor outranking on 3 keywords</li>
-          </ul>
-          <button class="mt-4 bg-gray-200 px-3 py-1 rounded-md text-sm">View All</button>
+      <!-- 3-column grid -->
+      <div class="flex flex-wrap -ml3">
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa3 br3 shadow-1 h-100 flex flex-column">
+            <h2 class="f4 fw6 mb3">Notifications & Insights</h2>
+            <ul class="list pl0 ml0 mb3">
+              <li class="green">✔️ +5 pages optimized this week</li>
+              <li class="green">📈 Avg. GEO score improved by 12%</li>
+              <li class="red">🔔 New LLM mention detected for your brand</li>
+              <li class="red">🔔 Competitor outranking on 3 keywords</li>
+            </ul>
+            <button class="mt-auto br2 ph3 pv2 bg-light-gray black">View All</button>
+          </div>
         </div>
 
-        <div class="bg-white p-4 rounded-xl shadow text-center">
-          <h2 class="text-xl font-semibold mb-4">Total Pages Audited</h2>
-          <div class="h-40 w-40 bg-gray-100 rounded-full mx-auto flex items-center justify-center">[Donut Chart]</div>
-          <div class="mt-2 text-sm">Optimized / Needs Improvement / Not Audited</div>
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa3 br3 shadow-1 h-100 flex flex-column items-center justify-center">
+            <h2 class="f4 fw6 mb3">Total Pages Audited</h2>
+            <canvas id="pagesChart" width="300" height="200"></canvas>
+            <p class="f6 black-60 mt3 tc">Pages Optimized vs Needs Improvement</p>
+          </div>
         </div>
 
-        <div class="bg-white p-4 rounded-xl shadow">
-          <h2 class="text-xl font-semibold mb-4">Recent Actions</h2>
-          <ul class="space-y-2">
-            <li><input type="checkbox" /> Audit blog homepage</li>
-            <li><input type="checkbox" /> Fix low GEO score landing page</li>
-            <li><input type="checkbox" /> Regenerate product descriptions with LLM</li>
-            <li><input type="checkbox" /> Review competitor snippet rankings</li>
-            <li><input type="checkbox" /> Update author schema on 3 articles</li>
-          </ul>
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa3 br3 shadow-1 h-100">
+            <h2 class="f4 fw6 mb3">Recent Actions</h2>
+            <ul class="list pl0 ml0">
+              <li class="mv2"><label><input type="checkbox" /> Audit blog homepage</label></li>
+              <li class="mv2"><label><input type="checkbox" /> Fix low GEO score landing page</label></li>
+              <li class="mv2"><label><input type="checkbox" /> Regenerate product descriptions with LLM</label></li>
+              <li class="mv2"><label><input type="checkbox" /> Review competitor snippet rankings</label></li>
+              <li class="mv2"><label><input type="checkbox" /> Update author schema on 3 articles</label></li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <!-- Trends -->
-      <div class="bg-white p-4 rounded-xl shadow mb4">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-semibold">GEO & SEO Score Trends</h2>
-          <select class="border px-2 py-1 rounded-md text-sm">
-            <option>Last 7 days</option>
+      <div class="bg-white pa3 br3 shadow-1 mb4">
+        <div class="flex justify-between items-center mb2">
+          <h2 class="f4 fw6">GEO & SEO Score Trends</h2>
+          <select class="pa2 br2 b--black-20">
             <option>Last 30 days</option>
+            <option>Last 60 days</option>
             <option>Custom</option>
           </select>
         </div>
-        <div class="h-64 bg-gray-100 flex items-center justify-center">[Line Graph: You vs Competitor]</div>
+        <canvas id="trendChart" width="600" height="200"></canvas>
       </div>
 
       <!-- Bottom Tools -->
-      <div class="grid grid-cols-3 gap-6 mb4">
-        <div class="bg-white p-4 rounded-xl shadow text-center">
-          <button class="bg-orange-100 text-orange-700 w-full py-3 rounded text-lg font-semibold">🟠 Brand Protector</button>
+      <div class="flex flex-wrap -ml3 mt4">
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
+            <button onclick="window.location.href='/brand-protector'" class="w-100 pa4 br3 bg-green white fw6 f5">
+              🟢 Brand Guard
+            </button>
+          </div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow text-center">
-          <button class="bg-green-100 text-green-700 w-full py-3 rounded text-lg font-semibold">🟢 Content Doctor</button>
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
+            <button onclick="window.location.href='/content-doctor'" class="w-100 pa4 br3 bg-light-purple white fw6 f5">
+              🟣 Content Doctor
+            </button>
+          </div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow text-center">
-          <button class="bg-purple-100 text-purple-700 w-full py-3 rounded text-lg font-semibold">🟣 Content Writer</button>
+        <div class="w-100 w-50-m w-33-l pa3">
+          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
+            <button onclick="window.location.href='/query-research'" class="w-100 pa4 br3 bg-gold white fw6 f5">
+              🟠 Query Search
+            </button>
+          </div>
         </div>
       </div>
     </main>
+  </div>
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const ctx = document.getElementById('pagesChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Optimized', 'Needs Improvement', 'Not Audited'],
+        datasets: [{
+          label: '# of Pages',
+          data: [12, 8, 5],  // mock numbers
+          backgroundColor: ['#2ecc71', '#9f7aea', '#f1c40f']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Page Audit Status' }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+  <script>
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: Array.from({length:30}, (_,i)=>`Day ${i+1}`),
+        datasets: [
+          {
+            label: "Your Brand",
+            data: Array.from({length:30}, (_,i)=>50 + i*0.8),
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+            fill: false,
+            tension: 0.3
+          },
+          {
+            label: "Competitor 1",
+            data: Array.from({length:30}, (_,i)=>95 + i*-0.2),
+            borderColor: '#9f7aea',
+            backgroundColor: 'rgba(159, 122, 234, 0.1)',
+            fill: false,
+            tension: 0.3
+          },
+          {
+            label: "Competitor 2",
+            data: Array.from({length:30}, (_,i)=>30 + i*0.5),
+            borderColor: '#f1c40f',
+            backgroundColor: 'rgba(241, 196, 15, 0.1)',
+            fill: false,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: '7-Day Performance Trend'
+          },
+          legend: {
+            display: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false
+          }
+        }
+      }
+    });
+  </script>
   </div>
 </body>
 </html>
