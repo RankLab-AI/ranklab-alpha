@@ -1,7 +1,8 @@
 import os
 from json import loads
 import logging
-from app.query_search import run_query_search as execute_search
+from app.query_research import run_query_search as execute_search
+from app.traffic_predictor import predict_llm_traffic
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
-from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
+# from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
 from app.scoring import compute_scores
 
 from app.utils import (
@@ -240,6 +241,41 @@ async def redirect_to_lab(request: Request, content: str = Form(...)):
             # no scores here, we’re in the lab phase
         },
     )
+
+
+@app.get("/traffic-predictor", response_class=HTMLResponse)
+async def traffic_form(request: Request):
+    """
+    Render the empty LLM Traffic Predictor form.
+    """
+    return templates.TemplateResponse(
+        "traffic_predictor.html",
+        {"request": request, "result": None, "error": None},
+    )
+
+
+@app.post("/predict-traffic", response_class=HTMLResponse)
+async def do_predict(
+    request: Request,
+    topic: str = Form(...),
+    content: str = Form(...),
+):
+    """
+    Accepts topic + content, calls predict_llm_traffic, and re-renders template
+    with the resulting data for charts.
+    """
+    try:
+        result = predict_llm_traffic(content=content, topic=topic, num_queries=5)
+        return templates.TemplateResponse(
+            "traffic_predictor.html",
+            {"request": request, "result": result, "error": None},
+        )
+    except Exception as e:
+        # on error, show message
+        return templates.TemplateResponse(
+            "traffic_predictor.html",
+            {"request": request, "result": None, "error": str(e)},
+        )
 
 
 @app.post("/content-lab", response_class=HTMLResponse)
