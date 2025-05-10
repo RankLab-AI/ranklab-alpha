@@ -1,17 +1,16 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 from openai import OpenAI
 import os
-import re
-from app.utils import get_prompt
 from app.generations import generate_llm_answer
 
 # Load environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
 client = OpenAI(
     api_key=os.getenv("VENICE_API_KEY"),
-    base_url=os.getenv("LLM_BASE_URL", "https://api.venice.ai/api/v1")
+    base_url=os.getenv("LLM_BASE_URL", "https://api.venice.ai/api/v1"),
 )
 
 # Prompt template to find related queries
@@ -30,12 +29,13 @@ Format as JSON array:
 ["question 1", "question 2", ...]
 """
 
+
 def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str]:
     """
     Generate 5 AI-centric queries based on input topic
     """
     prompt = QUERY_SEARCH_PROMPT.format(topic=topic)
-    
+
     try:
         raw_output = generate_llm_answer(prompt, [])
         # Try to parse JSON
@@ -55,7 +55,7 @@ def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str
             f"What are the best tools for blogging?",
             f"Step-by-step guide to blogging",
             f"Why should I start a blog?",
-            f"Blog vs website – what's the difference?"
+            f"Blog vs website – what's the difference?",
         ]
 
 
@@ -64,13 +64,10 @@ def analyze_query_relevance(query: str, max_sources: int = 3) -> List[Dict]:
     For each query, fetch supporting sources from DuckDuckGo
     """
     from app.brand_protector import search_duckduckgo
-    
+
     sources = search_duckduckgo(query, max_sources)
-    
-    return [{
-        "query": query,
-        "sources": sources
-    }]
+
+    return [{"query": query, "sources": sources}]
 
 
 def run_query_search(topic: str, model: str = "llama-3.2-3b") -> Dict[str, Union[str, List]]:
@@ -82,19 +79,7 @@ def run_query_search(topic: str, model: str = "llama-3.2-3b") -> Dict[str, Union
         results = []
         for q in queries:
             result = analyze_query_relevance(q)
-            results.append({
-                "query": q,
-                "sources": result[0]["sources"]
-            })
-        return {
-            "topic": topic,
-            "queries": queries,
-            "results": results
-        }
+            results.append({"query": q, "sources": result[0]["sources"]})
+        return {"topic": topic, "queries": queries, "results": results}
     except Exception as e:
-        return {
-            "error": str(e),
-            "topic": topic,
-            "queries": [],
-            "results": []
-        }
+        return {"error": str(e), "topic": topic, "queries": [], "results": []}

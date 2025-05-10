@@ -1,8 +1,7 @@
 import os
 from json import loads
 import logging
-from typing import Dict, Union
-from app.query_search import run_query_search
+from app.query_search import run_query_search as execute_search
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -12,12 +11,8 @@ from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
 from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
-from app.metrics import (
-    impression_wordpos_count_simple,
-    impression_word_count_simple,
-    impression_pos_count_simple,
-)
-from app.scoring import extract_citations_new
+from app.scoring import compute_scores
+
 from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
@@ -151,73 +146,35 @@ def content_doctor_page(request: Request):
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def analyze(request: Request, content: str = Form(...)):
-    # Input validation
-    if not content or len(content.strip()) == 0:
+    # 1) Input validation
+    if not content or not content.strip():
         return HTMLResponse(
             "<div class='red f6'>Error: Content cannot be empty</div>", status_code=400
         )
-
-    if len(content) > 50000:  # Example max length
+    if len(content) > 50_000:
         return HTMLResponse(
             "<div class='red f6'>Error: Content too long (max 50000 characters)</div>",
             status_code=400,
         )
 
+    # 2) Compute all eight metrics in one go
     try:
-        # Parse content
-        logging.debug(f"Analyzing content of length: {len(content)}")
-        parsed = extract_citations_new(content)
-
-        if not parsed:
-            logging.warning("Failed to parse content")
-            return HTMLResponse(
-                "<div class='red f6'>Error: Unable to parse content</div>", status_code=400
-            )
-
-        logging.debug(f"Successfully parsed content: {parsed[:100]}...")  # Log first 100 chars
-        n = 5
-
-        def avg_score(raw: Union[list, tuple]) -> float:
-            """Calculate average score with proper validation"""
-            if not isinstance(raw, (list, tuple)):
-                logging.warning(f"Invalid type for avg_score: {type(raw)}")
-                return 0.0
-            if not raw:
-                logging.warning("Empty input for avg_score")
-                return 0.0
-            try:
-                return round(sum(raw) / len(raw) * 100, 2)
-            except (TypeError, ValueError) as e:
-                logging.error(f"Error calculating average score: {e}")
-                return 0.0
-
-        # Calculate scores with error handling
-        try:
-            scores: Dict[str, float] = {
-                "Word+Position": avg_score(impression_wordpos_count_simple(parsed, n)),
-                "Word-only": avg_score(impression_word_count_simple(parsed, n)),
-                "Position-only": avg_score(impression_pos_count_simple(parsed, n)),
-            }
-            logging.debug(f"Calculated scores: {scores}")
-        except Exception as e:
-            logging.error(f"Error calculating scores: {e}")
-            return HTMLResponse(
-                "<div class='red f6'>Error calculating scores</div>", status_code=500
-            )
-
-        return templates.TemplateResponse(
-            "content_doctor.html",
-            {
-                "request": request,
-                "content": content,
-                "scores": scores,
-            },
-        )
+        logging.debug(f"Computing GEO metrics for content length {len(content)}")
+        scores = compute_scores(content, normalize=False)
+        logging.debug(f"Computed scores: {scores}")
     except Exception as e:
-        logging.error(f"Unexpected error in analyze route: {e}")
-        return HTMLResponse(
-            "<div class='red f6'>An unexpected error occurred</div>", status_code=500
-        )
+        logging.error(f"Error computing scores: {e}")
+        return HTMLResponse("<div class='red f6'>Error calculating scores</div>", status_code=500)
+
+    # 3) Render the same template, passing along the full `scores` dict
+    return templates.TemplateResponse(
+        "content_doctor.html",
+        {
+            "request": request,
+            "content": content,
+            "scores": scores,
+        },
+    )
 
 
 @app.get("/brand-protector", response_class=HTMLResponse)
@@ -244,6 +201,7 @@ async def brand_protector_run(
         "brand_protector.html", {"request": request, "results": results}
     )
 
+
 @app.get("/query-search", response_class=HTMLResponse)
 async def query_search_page(request: Request):
     return templates.TemplateResponse("query_search.html", {"request": request})
@@ -251,36 +209,64 @@ async def query_search_page(request: Request):
 
 @app.post("/query-search", response_class=HTMLResponse)
 async def run_query_search(request: Request, topic: str = Form(...)):
-    from app.query_search import run_query_search as execute_search
     try:
         result = execute_search(topic)
-        return templates.TemplateResponse("query_search.html", {
-            "request": request,
-            "topic": result["topic"],
-            "queries": result["queries"],
-            "results": result["results"]
-        })
+        return templates.TemplateResponse(
+            "query_search.html",
+            {
+                "request": request,
+                "topic": result["topic"],
+                "queries": result["queries"],
+                "results": result["results"],
+            },
+        )
     except Exception as e:
-        return templates.TemplateResponse("query_search.html", {
-            "request": request,
-            "error": f"Failed to fetch queries: {str(e)}"
-        })
-    
-@app.post("/predict-traffic", response_class=HTMLResponse)
-async def handle_query_search(request: Request, content: str = Form(...), topic: str = Form(...)):
-    try:
-        from app.traffic_predictor import predict_llm_traffic
-        result = predict_llm_traffic(content, topic)
-        return templates.TemplateResponse("traffic_predictor.html", {
-            "request": request,
-            "result": result
-        })
-    except Exception as e:
-        return templates.TemplateResponse("traffic_predictor.html", {
-            "request": request,
-            "error": f"Failed to generate prediction: {str(e)}"
-        })
+        return templates.TemplateResponse(
+            "query_search.html", {"request": request, "error": f"Failed to fetch queries: {str(e)}"}
+        )
 
+
+@app.post("/optimize", response_class=HTMLResponse)
+async def redirect_to_lab(request: Request, content: str = Form(...)):
+    """
+    When the user clicks “Optimize Content” we forward them
+    to /content-lab with the submitted text.
+    """
+    return templates.TemplateResponse(
+        "content_lab.html",
+        {
+            "request": request,
+            "content": content,
+            # no scores here, we’re in the lab phase
+        },
+    )
+
+
+@app.post("/content-lab", response_class=HTMLResponse)
+async def content_lab_page(
+    request: Request,
+    content: str = Form(...),
+):
+    """
+    Dispatch to your optimization logic based on `method`.
+    For now, we just echo back with a stub marker.
+    """
+    # Define available methods here
+    available_methods = [
+        "Keyword Stuffing",
+        "Quotation Addition",
+        "Stats Addition",
+        "Fluency Optimization",
+    ]
+
+    return templates.TemplateResponse(
+        "content_lab.html",
+        {
+            "request": request,
+            "content": content,
+            "methods": available_methods,
+        },
+    )
 
 
 # 💻 Local dev command

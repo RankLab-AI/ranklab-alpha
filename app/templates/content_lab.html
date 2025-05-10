@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Content Lab – RankLab AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- favicon -->
+  <link rel="icon" href="/static/img/favicon.png" type="image/png" />
+
+  <!-- tachyons & your styles -->
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+
+  <!-- *** Material Icons Outlined *** -->
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+    rel="stylesheet"
+  />
+</head>
+<body class="bg-near-white">
+  <div class="flex">
+    {% include "partials/sidebar.html" %}
+
+    <main class="flex-auto pa4">
+      <h2 class="header black-80 mb2">
+        <span class="material-icons-outlined v-mid mr2">science</span>
+        Content Lab
+      </h2>
+      <span class="f6 gray mb4 db">Choose an optimization and tweak your text.</span>
+
+      <form method="post" action="/content-optimize" class="mb4">
+        <form method="post" action="/content-lab" class="mb4">
+            <div class="mb3">
+              <label class="f5 db mb2">Optimization Method</label>
+              <select name="method" class="input-reset pa2 br2 b--black-20 w-100" required>
+                <option value="" disabled selected>-- pick one --</option>
+                {% for m in methods %}
+                  <option value="{{ m }}" {% if m == method %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb3">
+              <label class="f5 db mb2">Original Content</label>
+              <textarea
+                name="content"
+                rows="12"
+                class="w-100 pa3 ba b--black-20 br3 bg-white"
+                required
+              >{{ content or '' }}</textarea>
+            </div>
+
+            <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
+              {% if optimized %}Re-Run Optimization{% else %}Run Optimization{% endif %}
+            </button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

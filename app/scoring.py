@@ -1,38 +1,73 @@
-import re
+# app/scoring.py
+
+from typing import Dict, List
+from .metrics import (
+    extract_citations_spacy,
+    impression_wordpos_count_simple_spacy,
+    impression_word_count_simple_spacy,
+    impression_pos_count_simple_spacy,
+    impression_relevance_sm_spacy,
+    impression_influence_detailed_spacy,
+    impression_diversity_detailed_spacy,
+    impression_uniqueness_detailed_spacy,
+    impression_follow_detailed_spacy,
+)
 
 
-def simple_sent_tokenize(text):
+def compute_scores(text: str, normalize: bool = True) -> Dict[str, float]:
     """
-    Splits text into sentences using basic punctuation heuristics.
+    Parse `text`, extract citations via spaCy, then compute
+    eight GEO-style metrics over however many citations you actually have.
     """
-    # Add space after punctuation if not followed by space already (edge case cleanup)
-    text = re.sub(r"([.?!])([A-Z])", r"\1 \2", text)
-    # Naive sentence splitting by punctuation
-    return re.split(r"(?<=[.?!])\s+", text.strip())
+    # 1) Extract citation-annotated Doc
+    doc = extract_citations_spacy(text)
 
+    # 2) Count how many distinct citation IDs we have
+    all_cites = [c for para in doc for (_, _, cites) in para for c in cites]
+    n = max(all_cites) if all_cites else 0
 
-def simple_word_tokenize(sentence):
-    """
-    Splits sentence into words using whitespace and basic punctuation.
-    """
-    return re.findall(r"\b\w+\b", sentence)
+    if n == 0:
+        # no citations → zero out every metric
+        return {
+            m: 0.0
+            for m in [
+                "Word+Position",
+                "Word-only",
+                "Position-only",
+                "Relevance",
+                "Influence",
+                "Diversity",
+                "Uniqueness",
+                "Follow-Up",
+            ]
+        }
 
+    # 3) Simple GEO metrics
+    wpos = impression_wordpos_count_simple_spacy(doc, n=n, normalize=normalize)
+    wcnt = impression_word_count_simple_spacy(doc, n=n, normalize=normalize)
+    ppos = impression_pos_count_simple_spacy(doc, n=n, normalize=normalize)
 
-def extract_citations_new(text):
-    """
-    Extracts citation references (like [1], [2]) from each sentence.
-    Returns: list of paragraphs → sentences → (tokens, raw sentence, [citation indices])
-    """
+    # 4) Detailed GEO impressions (we anchor all of them to citation #1)
+    rel = impression_relevance_sm_spacy(doc, text, n=n, normalize=normalize)
+    infl = impression_influence_detailed_spacy(doc, text, n=n, normalize=normalize)
+    div = impression_diversity_detailed_spacy(doc, text, n=n, normalize=normalize)
+    uniq = impression_uniqueness_detailed_spacy(doc, text, n=n, normalize=normalize)
+    foll = impression_follow_detailed_spacy(doc, text, n=n, normalize=normalize)
 
-    def extract_from_sentence(sentence):
-        citation_pattern = r"\[[^\w\s]*\d+[^\w\s]*\]"
-        return [int(match) for match in re.findall(r"\d+", sentence)]
+    # helper to average only the non-zero buckets
+    def _pct_of_bucket(scores: List[float], idx: int = 0, perc=False) -> float:
+        """
+        Take the normalized score for bucket `idx` and turn it into a percentage.
+        """
+        return scores[idx] * 100.0 if perc else scores[idx]
 
-    # Naive paragraph splitting
-    paras = re.split(r"\n\s*\n", text.strip())
-    sentences = [simple_sent_tokenize(p) for p in paras]
-
-    return [
-        [(simple_word_tokenize(s), s, extract_from_sentence(s)) for s in paragraph]
-        for paragraph in sentences
-    ]
+    return {
+        "Word+Position": _pct_of_bucket(wpos),
+        "Word-only": _pct_of_bucket(wcnt),
+        "Position-only": _pct_of_bucket(ppos, perc=True),
+        "Relevance": _pct_of_bucket(rel),
+        "Influence": _pct_of_bucket(infl),
+        "Diversity": _pct_of_bucket(div, perc=True),
+        "Uniqueness": _pct_of_bucket(uniq, perc=True),
+        "Follow-Up": _pct_of_bucket(foll),
+    }
