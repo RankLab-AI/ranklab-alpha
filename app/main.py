@@ -1,8 +1,7 @@
 import os
 from json import loads
 import logging
-from app.query_research import run_query_search as execute_search
-from app.traffic_predictor import predict_llm_traffic
+from typing import List
 
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
@@ -11,20 +10,22 @@ from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
-# from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
+from app.brand_protector import run_brand_analysis
 from app.scoring import compute_scores
 from app.treatments.apply import apply_treatment
-
+from app.query_research import run_query_search as execute_search
+from app.traffic_predictor import predict_llm_traffic
 from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
 )
 
+DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
-
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -180,8 +181,27 @@ async def analyze(request: Request, content: str = Form(...)):
 
 
 @app.get("/brand-protector", response_class=HTMLResponse)
-async def brand_protector(request: Request):
-    return templates.TemplateResponse("brand_protector.html", {"request": request, "results": []})
+async def brand_guard_page(request: Request):
+    """
+    Show the empty Brand Guard form.
+    """
+    return templates.TemplateResponse(
+        "brand_protector.html",
+        {
+            "request": request,
+            # empty defaults for all fields:
+            "main_brand": "",
+            "competitors": "",
+            "agents": "",
+            "allow_paths": "",
+            "disallow_paths": "",
+            "cite_as": "",
+            "policy": "",
+            # no results yet:
+            "tables": None,
+            "robots_txts": None,
+        },
+    )
 
 
 @app.post("/brand-protector", response_class=HTMLResponse)
@@ -191,16 +211,37 @@ async def brand_protector_run(
     competitors: str = Form(""),
     risk_keywords: str = Form(""),
 ):
-    all_brands = [main_brand.strip()] + [c.strip() for c in competitors.split(",") if c.strip()]
-    custom_keywords = (
-        DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in risk_keywords.split(",")]
+    # parse out custom risk keywords (we'll pass these into `policy`)
+    custom_risks: List[str] = (
+        DEFAULT_RISK_KEYWORDS
+        + [kw.strip().lower() for kw in risk_keywords.split(",") if kw.strip()]
         if risk_keywords
         else DEFAULT_RISK_KEYWORDS
     )
-    results = [run_brand_analysis(brand, custom_keywords) for brand in all_brands]
 
+    # run analysis for each brand
+    html_table = None
+    llm_txt = None
+
+    comps = [c.strip() for c in competitors.split(",") if c.strip()]
+    html_table, llm_txt = run_brand_analysis(
+        brand=main_brand.strip(),
+        competitors=comps,
+        agents=None,
+        allow_paths=None,
+        disallow_paths=None,
+        cite_as="",
+        policy=", ".join(custom_risks),
+    )
+
+    # render template with both the generated HTML tables and the LLM text blocks
     return templates.TemplateResponse(
-        "brand_protector.html", {"request": request, "results": results}
+        "brand_protector.html",
+        {
+            "request": request,
+            "table": html_table,
+            "llm_txt": llm_txt,
+        },
     )
 
 
