@@ -2,6 +2,11 @@ from typing import List, Dict, Union
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
+from lamini import MemoryRAG
+
+# Resolve project-root relative data path into an absolute path
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # e.g. project_root/app/.. → project_root
+PDF_PATH = os.path.join(BASE_DIR, "data", "pdfs", "visit_london_sample.pdf")
 
 load_dotenv()
 
@@ -26,6 +31,7 @@ Format as JSON array:
 ["question 1", "question 2", ...]
 """
 
+
 # Prompt template to find missing topics
 TOPIC_COV_PROMPT = """
 You are an expert in content analysis.
@@ -41,6 +47,18 @@ Output as a JSON array of objects:
   {{ "topic": "Topic B", "score": 75 }},
   ...
 ]
+"""
+
+# Prompt template for RAG query with citation and scoring
+RAG_QUERY_PROMPT = """
+<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n
+You have access to the following indexed documents and websites in your memory store.
+Your task is to retrieve and summarize information about the given topic, and for each piece of information:
+- Include a citation in the form [source_name] indicating which document or website URL it came from.
+- Assign a relevance score (0–100) to each cited source, reflecting how relevant that source is to the topic.
+Return a JSON object with two keys:
+  "result": a single string summary containing the citations inline,
+  "citation_scores": an object mapping source_name to its relevance percentage. \n\n What is {topic}? <|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n
 """
 
 
@@ -120,6 +138,31 @@ def detect_topic_gaps(topics: List[str]) -> List[Dict[str, Union[str, int]]]:
     ]
 
 
+# --- Memory RAG Integration Helpers ---
+
+
+def build_memory_index(pdf_paths: List[str]) -> str:
+    """
+    Builds a Memory RAG index from a list of PDF file paths.
+    Returns the job ID for tracking.
+    """
+    client = MemoryRAG("meta-llama/Llama-3.1-8B-Instruct")
+    response = client.memory_index(documents=pdf_paths)
+    job_id = response.get("job_id")
+    if not job_id:
+        raise RuntimeError("Failed to enqueue memory indexing job")
+    return job_id
+
+
+def query_memory(client, prompt: str) -> str:
+    """
+    Queries the built Memory RAG index with a prompt.
+    Returns the LLM response as text.
+    """
+    response = client.query(prompt)
+    return response.get("text", "")
+
+
 # Main function used by FastAPI
 def run_query_research_on_topic(topic: str, source_count: int = 5) -> Dict[str, Union[str, List]]:
     """
@@ -148,3 +191,28 @@ def run_query_research_on_topic(topic: str, source_count: int = 5) -> Dict[str, 
         "citation_scores": citation_scores,
         "missing_topics": missing_topics,
     }
+
+
+def run_query_research_on_pages(topic: str) -> Dict[str, Union[str, List]]:
+    """
+    Build a Memory RAG index (if not already built) and query it for the given topic.
+    Returns the raw JSON response from the memory RAG.
+    """
+    client = MemoryRAG(job_id=17860)
+    prompt = RAG_QUERY_PROMPT.format(topic=topic)
+    response = client.query(prompt)
+    raw_outputs = response.get("outputs", [])
+    clean_results = []
+    for item in raw_outputs:
+        text = item.get("output", "")
+        # Strip markdown fences
+        text = text.strip().replace("```json", "").replace("```", "").strip()
+        # Try parsing JSON inside
+        try:
+            import json
+
+            parsed = json.loads(text)
+            clean_results.append(parsed)
+        except Exception:
+            clean_results.append({"result": text})
+    return clean_results
