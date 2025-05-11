@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Query Search – RankLab AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/img/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+</head>
+
+<body class="bg-near-white">
+  <div class="flex">
+    <!-- Sidebar -->
+    {% include "partials/sidebar.html" %}
+
+    <!-- Main Content -->
+    <main class="flex-auto pa4">
+      <div class="mb4">
+        <h2 class="header black-80 flex items-center">
+          <i class="material-icons-outlined mr1">search</i>
+          Query Search
+        </h2>
+        <span class="f6 gray db">Explore and expand keyword intent using conversational queries.</span>
+      </div>
+
+      <form method="post" action="/query-search" class="mb3 flex items-center">
+        <input
+          name="topic"
+          type="text"
+          placeholder="Enter topic..."
+          value="{{ topic or '' }}"
+          class="input-reset pa2 br2 b--black-20 mr2 w-50"
+          required
+        />
+        <button type="submit" class="btn-secondary br2 ph3 pv2 flex items-center">
+          <i class="material-icons-outlined v-mid mr1">search</i> Search
+        </button>
+      </form>
+
+      {% if error %}
+        <div class="red f6 mb3">{{ error }}</div>
+      {% endif %}
+
+      {% if topic %}
+        {% if related_queries %}
+          <div class="mt4">
+            <h3 class="f4 fw6 mb3">Related Queries for "<mark>{{ topic }}</mark>":</h3>
+            <ul class="list pl3">
+              {% for i in range(related_queries|length) %}
+                <li class="mb2">
+                  <span class="fw6">{{ related_queries[i] }}</span>
+                  <span class="ml2 bg-gold white f7 br2 ph2 pv1">{{ intent_labels[i] }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if missing_topics %}
+          <div class="mt4">
+            <h4 class="f5 fw6 mb3">Missing Topics:</h4>
+            <div class="flex flex-wrap gap3">
+              {% for missing in missing_topics %}
+                <div class="bg-white pa3 br2 shadow-card mb3 w5">
+                  <div class="f6 fw6 black-80">{{ missing.topic }}</div>
+                  <div class="f7 gray">Score: {{ "%.2f"|format(missing.score) }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </main>
+  </div>
+</body>
+</html>

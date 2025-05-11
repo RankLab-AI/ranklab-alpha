@@ -13,13 +13,13 @@ import uvicorn
 from app.brand_protector import run_brand_analysis
 from app.scoring import compute_scores
 from app.treatments.apply import apply_treatment
-from app.query_research import run_query_search as execute_search
 from app.traffic_predictor import predict_llm_traffic
 from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
 )
 from app.generations import generate_venice_response
+from app.query_research import run_query_research_on_topic
 
 DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
 
@@ -248,25 +248,31 @@ async def brand_protector_run(
 
 @app.get("/query-search", response_class=HTMLResponse)
 async def query_search_page(request: Request):
-    return templates.TemplateResponse("query_search.html", {"request": request})
+    return templates.TemplateResponse("query_research.html", {"request": request})
 
 
 @app.post("/query-search", response_class=HTMLResponse)
-async def run_query_search(request: Request, topic: str = Form(...)):
+async def run_query_research(request: Request, topic: str = Form(...)):
     try:
-        result = execute_search(topic)
+        result_dict = run_query_research_on_topic(topic)
+        queries = result_dict["queries"]
+        intent_labels = result_dict["intent_labels"]
+        missing_topics = result_dict["missing_topics"]
+        logging.debug(f"\n\n Payload{result_dict}")
         return templates.TemplateResponse(
-            "query_search.html",
+            "query_research.html",
             {
                 "request": request,
-                "topic": result["topic"],
-                "queries": result["queries"],
-                "results": result["results"],
+                "topic": topic,
+                "related_queries": queries,
+                "intent_labels": intent_labels,
+                "missing_topics": missing_topics,
             },
         )
     except Exception as e:
         return templates.TemplateResponse(
-            "query_search.html", {"request": request, "error": f"Failed to fetch queries: {str(e)}"}
+            "query_research.html",
+            {"request": request, "error": f"Failed to fetch queries: {str(e)}"},
         )
 
 
