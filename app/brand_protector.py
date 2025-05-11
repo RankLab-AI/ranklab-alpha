@@ -1,18 +1,24 @@
 import os
 import json
 import requests
+import logging
 import time
 from dotenv import load_dotenv
 from rich import print
 from rich.console import Console
 from rich.table import Table
-from rich.prompt import Prompt
+from typing import List
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 console = Console()
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 
 def get_groq_response(brand_name, model="llama3-70b-8192"):
@@ -103,13 +109,57 @@ def display_results(brands_info):
     console.print(table)
 
 
-def main():
-    print("[bold green]=== BrandGuard: LLM Insight Tool ===[/bold green]\n")
+def generate_html_table(brands_info):
+    """
+    Generate an HTML table representation of brand summary comparison.
+    """
+    headers = ["Brand", "Summary", "Keywords", "Offerings", "Criticisms", "Alternatives"]
+    html = ['<table class="collapse ba br2 b--black-10 w-100"><thead><tr>']
+    for h in headers:
+        html.append(f'<th class="pv2 ph3 tl f6 fw6 ttu">{h}</th>')
+    html.append('</tr></thead><tbody class="lh-copy">')
+    for info in brands_info:
+        html.append("<tr>")
+        html.append(f'<td class="pv2 ph3">{info["brand"]}</td>')
+        html.append(f'<td class="pv2 ph3">{info["summary"]}</td>')
+        html.append(f'<td class="pv2 ph3">{info["keywords"]}</td>')
+        html.append(f'<td class="pv2 ph3">{info["offerings"]}</td>')
+        html.append(f'<td class="pv2 ph3">{info["criticisms"]}</td>')
+        html.append(f'<td class="pv2 ph3">{info["alternatives"]}</td>')
+        html.append("</tr>")
+    html.append("</tbody></table>")
+    return "".join(html)
 
-    brand = Prompt.ask("Enter your brand").strip()
-    competitors = Prompt.ask("Enter competitors (comma-separated)").strip().split(",")
 
-    all_brands = [brand] + [c.strip() for c in competitors if c.strip()]
+def run_brand_analysis(
+    brand: str,
+    competitors: List[str],
+    agents: List[str] = None,
+    allow_paths: List[str] = None,
+    disallow_paths: List[str] = None,
+    cite_as: str = "",
+    policy: str = "",
+):
+    logging.debug("[bold green]=== BrandGuard: LLM Insight Tool ===[/bold green]\n")
+
+    # Normalize competitors input to a list
+    if isinstance(competitors, str):
+        comp_list = [c.strip() for c in competitors.split(",") if c.strip()]
+    else:
+        comp_list = [c.strip() for c in competitors if isinstance(c, str) and c.strip()]
+
+    # Build combined list and remove duplicates, preserving order
+    combined = [brand] + comp_list
+    seen = set()
+    all_brands = []
+    for b in combined:
+        if b not in seen:
+            all_brands.append(b)
+            seen.add(b)
+    # default empty lists if not provided
+    agents = agents or []
+    allow_paths = allow_paths or []
+    disallow_paths = disallow_paths or []
     all_infos = []
 
     for b in all_brands:
@@ -119,50 +169,32 @@ def main():
         all_infos.append(brand_info)
         time.sleep(2)
 
-    print("\n[bold green]=== Brand Summary Comparison ===[/bold green]\n")
-    display_results(all_infos)
+    logging.debug("\n[bold green]=== Brand Summary Comparison ===[/bold green]\n")
+    res_table = generate_html_table(all_infos)
+    llm_txt = generate_llm_txt(agents, allow_paths, disallow_paths, cite_as, policy)
 
-    print("\n[bold blue]=== Optional: Generate llm.txt file to guide LLM bots ===[/bold blue]")
-    generate_llm = (
-        Prompt.ask("Would you like to generate a llm.txt file? (yes/no)", default="no")
-        .strip()
-        .lower()
-    )
-
-    if generate_llm == "yes":
-        agents = Prompt.ask(
-            "Enter target LLMs (comma-separated, e.g., ChatGPT,Gemini)", default="ChatGPT"
-        ).split(",")
-        allow_paths = Prompt.ask("Paths to ALLOW (comma-separated)", default="/").split(",")
-        disallow_paths = Prompt.ask(
-            "Paths to DISALLOW (comma-separated)", default="/private/"
-        ).split(",")
-        cite_as = Prompt.ask("Canonical citation URL (optional)", default="").strip()
-        policy = Prompt.ask(
-            "Policy (summary, no-summary, citation-required, no-training)",
-            default="citation-required",
-        ).strip()
-
-        llm_txt = ""
-        for agent in agents:
-            llm_txt += f"User-agent: {agent.strip()}\n"
-            for path in allow_paths:
-                llm_txt += f"Allow: {path.strip()}\n"
-            for path in disallow_paths:
-                llm_txt += f"Disallow: {path.strip()}\n"
-            if cite_as:
-                llm_txt += f"Cite-as: {cite_as}\n"
-            if policy:
-                llm_txt += f"Policy: {policy}\n"
-            llm_txt += "\n"
-
-        with open("llm.txt", "w") as f:
-            f.write(llm_txt)
-
-        print(
-            "\n[bold green]✅ llm.txt file generated and saved in the current directory.[/bold green]"
-        )
+    return res_table, llm_txt
 
 
-if __name__ == "__main__":
-    main()
+def generate_llm_txt(
+    agents: List[str],
+    allow_paths: List[str],
+    disallow_paths: List[str],
+    cite_as: str,
+    policy: str,
+) -> str:
+    if not (agents or allow_paths or disallow_paths or cite_as or policy):
+        return None
+    llm_txt = ""
+    for agent in agents:
+        llm_txt += f"User-agent: {agent.strip()}\n"
+        for path in allow_paths:
+            llm_txt += f"Allow: {path.strip()}\n"
+        for path in disallow_paths:
+            llm_txt += f"Disallow: {path.strip()}\n"
+        if cite_as:
+            llm_txt += f"Cite-as: {cite_as}\n"
+        if policy:
+            llm_txt += f"Policy: {policy}\n"
+        llm_txt += "\n"
+    return llm_txt
