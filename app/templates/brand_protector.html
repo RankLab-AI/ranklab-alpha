@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 
 <body class="bg-near-white">
@@ -19,9 +20,11 @@
 
     <!-- Main Content -->
     <main class="flex-auto pa4">
-      <div class="flex justify-between items-center mb4">
-        <h2 class="header black-80">🛡️ Brand Guard</h2>
-        <span class="f6 gray">Check brand reputation across LLM summaries, risks, and sentiment.</span>
+      <div class="mb4">
+        <h2 class="header black-80">
+          <span class="material-icons-outlined mr2 v-mid">security</span> Brand Guard
+        </h2>
+        <span class="f6 gray">Get AI-driven insights on your brand, keywords, criticisms, and alternatives.</span>
       </div>
 
       {% if table %}
