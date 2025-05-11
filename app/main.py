@@ -13,6 +13,7 @@ import uvicorn
 
 # from app.brand_protector import run_brand_analysis, DEFAULT_RISK_KEYWORDS
 from app.scoring import compute_scores
+from app.treatments.apply import apply_treatment
 
 from app.utils import (
     verify_firebase_token,
@@ -282,25 +283,52 @@ async def do_predict(
 async def content_lab_page(
     request: Request,
     content: str = Form(...),
+    original_copy: str = Form(),
+    method: str = Form(None),
 ):
     """
-    Dispatch to your optimization logic based on `method`.
-    For now, we just echo back with a stub marker.
+    Applies the selected treatment to the content and displays the result.
     """
-    # Define available methods here
     available_methods = [
         "Keyword Stuffing",
         "Quotation Addition",
         "Stats Addition",
         "Fluency Optimization",
     ]
+    # Mapping from user-facing method names to internal keys
+    method_key_map = {
+        "Quotation Addition": "quotation",
+        "Stats Addition": "stats",
+        "Fluency Optimization": "fluency",
+        "Keyword Stuffing": "keyword",
+    }
+    try:
+        if method:
+            method_key = method_key_map.get(method)
+            if method_key:
+                treated_prompt = apply_treatment(method_key, content)
+            else:
+                treated_prompt = content
+        else:
+            treated_prompt = content
+    except ValueError as e:
+        treated_prompt = f"⚠️ Error: {str(e)}"
+
+    try:
+        scores = compute_scores(treated_prompt, normalize=False)
+    except Exception as e:
+        logging.error(f"Error computing scores in content-lab: {e}")
+        scores = None
 
     return templates.TemplateResponse(
         "content_lab.html",
         {
             "request": request,
-            "content": content,
+            "content": treated_prompt,
+            "original_copy": original_copy,
+            "selected_method": method,
             "methods": available_methods,
+            "scores": scores,
         },
     )
 

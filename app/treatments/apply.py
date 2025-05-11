@@ -1,6 +1,6 @@
 # treatments/apply.py
 
-from treatments.prompts import (
+from app.treatments.prompts import (
     QUOTATION_PROMPT,
     STATS_PROMPT,
     FLUENCY_PROMPT,
@@ -15,7 +15,7 @@ SUPPORTED_METHODS = {
 }
 
 
-def apply_treatment(method: str, content: str, query: str = "") -> str:
+def apply_treatment(method: str, content: str) -> str:
     """
     Constructs a treatment prompt for the specified method.
 
@@ -33,4 +33,4 @@ def apply_treatment(method: str, content: str, query: str = "") -> str:
             f"Unsupported method '{method}'. Choose from: {list(SUPPORTED_METHODS.keys())}"
         )
 
-    return SUPPORTED_METHODS[method](content, query=query)
+    return SUPPORTED_METHODS[method].format(content=content)
