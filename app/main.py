@@ -19,7 +19,7 @@ from app.utils import (
     FIREBASE_JS_CONFIG,
 )
 from app.generations import generate_venice_response
-from app.query_research import run_query_research_on_topic
+from app.query_research import run_query_research_on_topic, run_query_research_on_pages
 
 DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
 
@@ -274,6 +274,23 @@ async def run_query_research(request: Request, topic: str = Form(...)):
             "query_research.html",
             {"request": request, "error": f"Failed to fetch queries: {str(e)}"},
         )
+
+
+@app.post("/page-ranker", response_class=HTMLResponse)
+async def page_ranker(request: Request, topic: str = Form(...)):
+    """
+    Build a RAG index on a fixed PDF and query it with the given topic.
+    Preprocess the raw RAG output into structured JSON before rendering.
+    """
+    rag_result = run_query_research_on_pages(topic)
+    return templates.TemplateResponse(
+        "query_research.html",
+        {
+            "request": request,
+            "topic": topic,
+            "rag_result": rag_result,
+        },
+    )
 
 
 @app.post("/optimize", response_class=HTMLResponse)
