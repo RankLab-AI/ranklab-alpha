@@ -19,6 +19,7 @@ from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
 )
+from app.generations import generate_venice_response
 
 DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
 
@@ -355,8 +356,10 @@ async def content_lab_page(
     except ValueError as e:
         treated_prompt = f"⚠️ Error: {str(e)}"
 
+    treated_content = generate_venice_response(treated_prompt) if method else content
+
     try:
-        scores = compute_scores(treated_prompt, normalize=False)
+        scores = compute_scores(treated_content, normalize=False)
     except Exception as e:
         logging.error(f"Error computing scores in content-lab: {e}")
         scores = None
@@ -365,7 +368,7 @@ async def content_lab_page(
         "content_lab.html",
         {
             "request": request,
-            "content": treated_prompt,
+            "content": treated_content,
             "original_copy": original_copy,
             "selected_method": method,
             "methods": available_methods,

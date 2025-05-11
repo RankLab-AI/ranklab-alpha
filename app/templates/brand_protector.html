@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Brand Guard – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="/static/img/icon.png" />
+  <link rel="icon" type="image/png" href="/static/img/favicon.png" />
   <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
@@ -14,9 +14,7 @@
 <body class="bg-near-white">
   <div class="flex">
     <!-- Sidebar -->
-    <aside class="sidebar bg-white pa3 shadow-card" style="width: 18rem; flex-shrink: 0;">
-      {% include "partials/sidebar.html" %}
-    </aside>
+    {% include "partials/sidebar.html" %}
 
     <!-- Main Content -->
     <main class="flex-auto pa4">
@@ -38,7 +36,7 @@
 
       {% if llm_txt %}
         <div class="mt4">
-          <h4 class="f5 fw6 mb2">Generated TXT Blocks</h4>
+          <h4 class="f5 fw6 mb2">Generated LLM.TXT Blocks</h4>
             <div class="bg-black-05 pa3 br2 mb3">
               <pre class="f6 code white-90">{{ llm_txt }}</pre>
             </div>
@@ -70,7 +68,7 @@
         </div>
 
         <details class="mb3 pa3 ba b--black-10 br2">
-          <summary class="f5 fw6 pointer">TXT Generation Settings (optional)</summary>
+          <summary class="f5 fw6 pointer">LLM.TXT Generation Settings (optional)</summary>
 
           <div class="mt3">
             <label class="f5 db mb2">Agents</label>

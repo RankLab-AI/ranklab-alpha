@@ -1,7 +1,10 @@
 <!-- File: app/templates/partials/sidebar.html -->
-<aside class="sidebar w6 bg-white pa3 shadow-card" style="width: 260px; min-height: 100vh; min-width: 18rem;">
+<aside class="sidebar w6 bg-white pa3 shadow-card" style="width: 320px; min-height: 100vh; min-width: 18rem;">
   <div class="mb4 tc">
-    <img src="/static/img/logo.png" class="h2 center" alt="RankLab AI Logo" />
+    <img src="/static/img/logo.png" class="h3 center" alt="RankLab AI Logo" />
+    <div class="f7 gray mt2 tc tracked">
+      Built for Visibility in the Age of LLMs
+    </div>
   </div>
   <nav class="f6 flex flex-column">
       <a href="/dashboard" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
@@ -25,7 +28,7 @@
     <a href="/brand-protector" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
       <span class="flex items-center">
         <span class="material-icons-outlined mr2 v-mid">security</span>
-        Brand Protector
+        Brand Guard
       </span>
       <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
     </a>
@@ -37,13 +40,8 @@
       LLM Traffic Predictor
     </a>
 
-    <a href="#" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
-      <span class="material-icons-outlined mr2 v-mid">science</span>
-      Learning Center
-    </a>
-
     <form action="/logout" method="post" class="mt4">
-      <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib w-100 bg-light-red">
+      <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib w-100 bg-light-purple">
         Logout
       </button>
     </form>

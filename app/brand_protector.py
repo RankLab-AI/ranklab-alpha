@@ -4,16 +4,12 @@ import requests
 import logging
 import time
 from dotenv import load_dotenv
-from rich import print
-from rich.console import Console
-from rich.table import Table
 from typing import List
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-console = Console()
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -86,27 +82,6 @@ def summarize_brand(brand_data):
         "criticisms": brand_data.get("criticisms", "⚠️"),
         "alternatives": brand_data.get("alternatives", "⚠️"),
     }
-
-
-def display_results(brands_info):
-    table = Table(title="Brand Summary Comparison", show_lines=True)
-    table.add_column("Brand", style="cyan", no_wrap=True)
-    table.add_column("LLM Summary")
-    table.add_column("Keywords")
-    table.add_column("Offerings")
-    table.add_column("Criticisms")
-    table.add_column("Alternatives")
-
-    for info in brands_info:
-        table.add_row(
-            info["brand"],
-            info["summary"],
-            info["keywords"],
-            info["offerings"],
-            info["criticisms"],
-            info["alternatives"],
-        )
-    console.print(table)
 
 
 def generate_html_table(brands_info):
