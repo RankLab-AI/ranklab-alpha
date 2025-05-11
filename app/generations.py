@@ -38,3 +38,26 @@ def generate_llm_answer(
         except Exception as e:
             print("Error from API:", e)
             time.sleep(15)
+
+
+def generate_venice_response(
+    message: str, temperature: float = 0.5, model: str = "llama-4-maverick-17b"
+) -> str:
+    """
+    Sends a single user message to the Venice API and returns the assistant's reply.
+    """
+    try:
+        response = openai_client.chat.completions.create(
+            model=model,
+            temperature=temperature,
+            max_tokens=1024,
+            top_p=1,
+            n=1,
+            messages=[{"role": "user", "content": message}],
+        )
+        # Return the content of the first (and only) choice
+        return response.choices[0].message.content
+    except Exception as e:
+        print("Error from Venice API:", e)
+        # Re-raise or handle as needed; here we just return an empty string
+        return ""
