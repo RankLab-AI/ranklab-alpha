@@ -1,12 +1,7 @@
-# query_research.py
 from typing import List, Dict, Union
+from dotenv import load_dotenv
 from openai import OpenAI
 import os
-from app.generations import generate_llm_answer
-import random
-
-# Load environment variables
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -31,15 +26,34 @@ Format as JSON array:
 ["question 1", "question 2", ...]
 """
 
+# Prompt template to find missing topics
+TOPIC_COV_PROMPT = """
+You are an expert in content analysis.
+Given the following existing topics and questions that are covered, identify 5 important related topics or subtopics that are missing
+and would add value. For each, provide a relevance score out of 100.
 
-def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str]:
+Covered items:
+{topics}
+
+Output as a JSON array of objects:
+[
+  {{ "topic": "Topic A", "score": 80 }},
+  {{ "topic": "Topic B", "score": 75 }},
+  ...
+]
+"""
+
+
+def extract_related_queries(topic: str) -> List[str]:
     """
     Generate 5 AI-centric queries based on input topic
     """
     prompt = QUERY_SEARCH_PROMPT.format(topic=topic)
 
     try:
-        raw_output = generate_llm_answer(prompt, [])
+        from app.generations import generate_venice_response
+
+        raw_output = generate_venice_response(prompt)
         # Try to parse JSON
         if isinstance(raw_output, list):
             return raw_output[:5]
@@ -61,32 +75,6 @@ def extract_related_queries(topic: str, model: str = "llama-3.2-3b") -> List[str
         ]
 
 
-def analyze_query_relevance(query: str, max_sources: int = 3) -> List[Dict]:
-    """
-    For each query, fetch supporting sources from DuckDuckGo
-    """
-    from app.brand_protector import search_duckduckgo
-
-    sources = search_duckduckgo(query, max_sources)
-
-    return [{"query": query, "sources": sources}]
-
-
-def run_query_search(topic: str, model: str = "llama-3.2-3b") -> Dict[str, Union[str, List]]:
-    """
-    Main function used by FastAPI route to power the Query Search Tool
-    """
-    try:
-        queries = extract_related_queries(topic, model=model)
-        results = []
-        for q in queries:
-            result = analyze_query_relevance(q)
-            results.append({"query": q, "sources": result[0]["sources"]})
-        return {"topic": topic, "queries": queries, "results": results}
-    except Exception as e:
-        return {"error": str(e), "topic": topic, "queries": [], "results": []}
-
-
 # Classify query intent
 def classify_query_intent(query: str) -> str:
     info_keywords = ["what", "how", "why", "explain"]
@@ -104,18 +92,27 @@ def classify_query_intent(query: str) -> str:
 
 
 # Detect missing topics
-def detect_topic_gaps(site_content: List[str]) -> List[Dict[str, Union[str, int]]]:
-    """Find gaps in content coverage using NLP or LLM"""
-    all_topics = []
-    for content in site_content:
-        if "AI" in content:
-            all_topics.append("AI SEO")
-        if "chatbot" in content:
-            all_topics.append("Chatbot Optimization")
-        if "rank" in content and "LLM" in content:
-            all_topics.append("LLM Search Strategy")
-    topic_counter = Counter(all_topics)
-    # Return high-priority topics not covered yet
+def detect_topic_gaps(topics: List[str]) -> List[Dict[str, Union[str, int]]]:
+    """
+    Use an LLM to find topics not covered by the provided content.
+    Returns a list of dicts with 'topic' and 'score'.
+    """
+    from app.generations import generate_venice_response
+
+    try:
+        # format topics as markdown unordered list
+        topics_md = "\n".join(f"- {t}" for t in topics)
+        raw = generate_venice_response(TOPIC_COV_PROMPT.format(topics=topics_md))
+        # Clean markdown if needed
+        if isinstance(raw, str):
+            cleaned = raw.strip().replace("```json", "").replace("```", "")
+            return eval(cleaned)
+        elif isinstance(raw, list):
+            return raw
+    except Exception as e:
+        print(f"Error detecting topic gaps: {e}")
+
+    # Fallback static topics
     return [
         {"topic": "Generative Engine Optimization", "score": 85},
         {"topic": "Brand Perception Monitoring", "score": 70},
@@ -123,54 +120,31 @@ def detect_topic_gaps(site_content: List[str]) -> List[Dict[str, Union[str, int]
     ]
 
 
-# Predict user behavior paths
-def predict_user_journey(pages: List[Dict[str, str]]) -> List[Dict[str, Union[str, float]]]:
-    """Predict bounce rates, conversion points, and UX recommendations"""
-    journey_map = []
-    for i, page in enumerate(pages):
-        title = page.get("title", f"Page {i + 1}")
-        url = page.get("url", "#")
-        bounce_rate = round(random.uniform(40, 80), 2)
-        conversion_rate = round(random.uniform(1, 3), 2)
-        journey_map.append(
-            {
-                "title": title,
-                "url": url,
-                "bounce_rate": bounce_rate,
-                "conversion_rate": conversion_rate,
-                "recommendation": "Add summary + bullet points."
-                if bounce_rate > 60
-                else "Good engagement.",
-            }
-        )
-    return journey_map
-
-
 # Main function used by FastAPI
-def run_query_research_on_pages(
-    pages: List[Dict[str, str]], topic: str
-) -> Dict[str, Union[str, List]]:
-    results = []
-    for page in pages:
-        content = page.get("content", "")
-        page_queries = extract_related_queries(content[:100])
-        scores = [classify_query_intent(q) for q in page_queries]
-        citation_score = random.randint(40, 90)
-        avg_intent = max(set(scores), key=scores.count) if scores else "Unknown"
-        results.append(
-            {
-                "url": page["url"],
-                "queries": page_queries,
-                "intent_scores": scores,
-                "avg_intent": avg_intent,
-                "citation_score": citation_score,
-            }
-        )
-    missing_topics = detect_topic_gaps([p["content"] for p in pages])
-    journey_recommendations = predict_user_journey(pages)
+def run_query_research_on_topic(topic: str, source_count: int = 5) -> Dict[str, Union[str, List]]:
+    """
+    Simplified: generate related queries and intents based on the single topic.
+    """
+    # Generate 5 related queries for the topic
+    queries = extract_related_queries(topic)
+
+    # Classify each query's intent
+    intent_labels = [classify_query_intent(q) for q in queries]
+
+    # Determine average intent (most frequent)
+    avg_intent = max(set(intent_labels), key=intent_labels.count) if intent_labels else "Unknown"
+
+    # Placeholder citation score (zero for now)
+    citation_scores = [0 for _ in queries]
+
+    # Detect topic gaps using the topic as content
+    missing_topics = detect_topic_gaps([topic])
+
     return {
         "topic": topic,
-        "results": results,
+        "queries": queries,
+        "intent_labels": intent_labels,
+        "avg_intent": avg_intent,
+        "citation_scores": citation_scores,
         "missing_topics": missing_topics,
-        "journey_recommendations": journey_recommendations,
     }
