@@ -69,6 +69,7 @@
             <form method="post" action="/content-lab">
               <!-- carry over the entire text area value -->
               <input type="hidden" name="content" value="{{ content|e }}" />
+              <input type="hidden" name="original_copy" value="{{ content|e }}" />
               <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
                 Optimize Content
               </button>
