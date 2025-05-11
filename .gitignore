@@ -180,3 +180,6 @@ cython_debug/
 *-creds.json
 *.creds.json
 *.credentials.json
+
+# Pickle Files
+*.pkl
