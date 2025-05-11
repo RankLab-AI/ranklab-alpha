@@ -158,18 +158,19 @@ def generate_llm_txt(
     cite_as: str,
     policy: str,
 ) -> str:
-    if not (agents or allow_paths or disallow_paths or cite_as or policy):
+    if not agents and not allow_paths and not disallow_paths and not cite_as:
         return None
+    # original LLM-generation logic here, which produces `txt_blocks` as a list
     llm_txt = ""
     for agent in agents:
         llm_txt += f"User-agent: {agent.strip()}\n"
-        for path in allow_paths:
-            llm_txt += f"Allow: {path.strip()}\n"
-        for path in disallow_paths:
-            llm_txt += f"Disallow: {path.strip()}\n"
-        if cite_as:
-            llm_txt += f"Cite-as: {cite_as}\n"
-        if policy:
-            llm_txt += f"Policy: {policy}\n"
-        llm_txt += "\n"
+    for path in allow_paths:
+        llm_txt += f"Allow: {path.strip()}\n"
+    for path in disallow_paths:
+        llm_txt += f"Disallow: {path.strip()}\n"
+    if cite_as:
+        llm_txt += f"Cite-as: {cite_as}\n"
+    if policy:
+        llm_txt += f"Policy: {policy}\n"
+    llm_txt += "\n"
     return llm_txt

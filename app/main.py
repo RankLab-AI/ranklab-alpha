@@ -210,15 +210,22 @@ async def brand_protector_run(
     request: Request,
     main_brand: str = Form(...),
     competitors: str = Form(""),
-    risk_keywords: str = Form(""),
+    policy: str = Form(""),
+    agents: str = Form(""),
+    allow_paths: str = Form(""),
+    disallow_paths: str = Form(""),
+    cite_as: str = Form(""),
 ):
     # parse out custom risk keywords (we'll pass these into `policy`)
     custom_risks: List[str] = (
-        DEFAULT_RISK_KEYWORDS
-        + [kw.strip().lower() for kw in risk_keywords.split(",") if kw.strip()]
-        if risk_keywords
+        DEFAULT_RISK_KEYWORDS + [kw.strip().lower() for kw in policy.split(",") if kw.strip()]
+        if policy
         else DEFAULT_RISK_KEYWORDS
     )
+
+    agents_list = [a.strip() for a in agents.split(",") if a.strip()]
+    allow_list = [p.strip() for p in allow_paths.split(",") if p.strip()]
+    disallow_list = [p.strip() for p in disallow_paths.split(",") if p.strip()]
 
     # run analysis for each brand
     html_table = None
@@ -228,12 +235,14 @@ async def brand_protector_run(
     html_table, llm_txt = run_brand_analysis(
         brand=main_brand.strip(),
         competitors=comps,
-        agents=None,
-        allow_paths=None,
-        disallow_paths=None,
-        cite_as="",
+        agents=agents_list,
+        allow_paths=allow_list,
+        disallow_paths=disallow_list,
+        cite_as=cite_as,
         policy=", ".join(custom_risks),
     )
+
+    logging.debug(f"llem+text || {llm_txt}")
 
     # render template with both the generated HTML tables and the LLM text blocks
     return templates.TemplateResponse(
