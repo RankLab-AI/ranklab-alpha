@@ -71,6 +71,31 @@
             </div>
           </div>
         {% endif %}
+        <!-- This form's action is dynamic: if a topic is present, submits to /page-ranker; otherwise, to /query-search -->
+        <form method="post"
+            action="{% if topic %}/page-ranker{% else %}/query-search{% endif %}"
+            class="mt4">
+          <input type="hidden" name="topic" value="{{ topic or '' }}" />
+          <input type="hidden" name="related_queries" value="{{ related_queries }}" />
+          <input type="hidden" name="missing_topics" value="{{ missing_topics }}" />
+          <button type="submit" class="br2 ph3 pv2 b white bg-black hover-bg-dark-gray">
+            {% if topic %}
+              Rank for Query
+            {% else %}
+              Analyze Query
+            {% endif %}
+          </button>
+        </form>
+      {% endif %}
+
+
+      {% if rag_result %}
+        <div class="mt4">
+          <h3 class="f4 fw6 mb3">Query Results:</h3>
+          <div class="bg-white pa3 br2 shadow-card mb3 w-100">
+            <pre class="f6 black-90" style="white-space: pre-wrap; word-break: break-word;">{{ rag_result | tojson(indent=2) }}</pre>
+          </div>
+        </div>
       {% endif %}
     </main>
   </div>
