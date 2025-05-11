@@ -5,6 +5,7 @@ openai==1.61.1
 firebase-admin==6.4.0
 python-dotenv==1.0.1
 httpx==0.27.0
+lamini==3.4.4
 loguru==0.7.2
 pydantic==2.4.2
 python-multipart==0.0.20
