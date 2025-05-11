@@ -24,74 +24,111 @@
         <span class="f6 gray">Check brand reputation across LLM summaries, risks, and sentiment.</span>
       </div>
 
+      {% if table %}
+        <div class="mt4">
+          <h3 class="f5 fw6 black-60 mb3">Brand Reputation Summary</h3>
+          <div class="overflow-auto mb4">
+            {{ table|safe }}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if llm_txt %}
+        <div class="mt4">
+          <h4 class="f5 fw6 mb2">Generated TXT Blocks</h4>
+            <div class="bg-black-05 pa3 br2 mb3">
+              <pre class="f6 code white-90">{{ llm_txt }}</pre>
+            </div>
+        </div>
+      {% endif %}
+
       <form method="post" action="/brand-protector" class="mb4">
         <div class="mb3">
           <label class="f5 db mb2">Your Brand</label>
-          <input type="text" name="main_brand" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter your brand name" required>
+          <input
+            type="text"
+            name="main_brand"
+            class="input-reset pa2 br2 b--black-20 w-100"
+            placeholder="Enter your brand name"
+            required
+            value="{{ main_brand or '' }}"
+          >
         </div>
 
         <div class="mb3">
           <label class="f5 db mb2">Competitor Brands</label>
-          <input type="text" name="competitors" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter competitors (comma-separated)">
+          <input
+            type="text"
+            name="competitors"
+            class="input-reset pa2 br2 b--black-20 w-100"
+            placeholder="Enter competitors (comma-separated)"
+            value="{{ competitors or '' }}"
+          >
         </div>
 
-        <div class="mb3">
-          <label class="f5 db mb2">Custom Risk Keywords</label>
-          <input type="text" name="risk_keywords" class="input-reset pa2 br2 b--black-20 w-100" placeholder="Enter additional risk keywords (comma-separated)">
-        </div>
+        <details class="mb3 pa3 ba b--black-10 br2">
+          <summary class="f5 fw6 pointer">TXT Generation Settings (optional)</summary>
+
+          <div class="mt3">
+            <label class="f5 db mb2">Agents</label>
+            <input
+              type="text"
+              name="agents"
+              class="input-reset pa2 br2 b--black-20 w-100"
+              placeholder="Agent names (comma-separated)"
+              value="{{ agents or '' }}"
+            >
+          </div>
+
+          <div class="mt3">
+            <label class="f5 db mb2">Allow Paths</label>
+            <input
+              type="text"
+              name="allow_paths"
+              class="input-reset pa2 br2 b--black-20 w-100"
+              placeholder="/public, /images, ..."
+              value="{{ allow_paths or '' }}"
+            >
+          </div>
+
+          <div class="mt3">
+            <label class="f5 db mb2">Disallow Paths</label>
+            <input
+              type="text"
+              name="disallow_paths"
+              class="input-reset pa2 br2 b--black-20 w-100"
+              placeholder="/private, /admin, ..."
+              value="{{ disallow_paths or '' }}"
+            >
+          </div>
+
+          <div class="mt3">
+            <label class="f5 db mb2">Cite As</label>
+            <input
+              type="text"
+              name="cite_as"
+              class="input-reset pa2 br2 b--black-20 w-100"
+              placeholder="e.g., ‘Acme Corp.’"
+              value="{{ cite_as or '' }}"
+            >
+          </div>
+
+          <div class="mt3">
+            <label class="f5 db mb2">Policy Keywords</label>
+            <input
+              type="text"
+              name="policy"
+              class="input-reset pa2 br2 b--black-20 w-100"
+              placeholder="e.g., reputation, sentiment, risk"
+              value="{{ policy or '' }}"
+            >
+          </div>
+        </details>
 
         <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
           Analyze Brands
         </button>
       </form>
-
-      {% if results %}
-        <div class="mt4">
-          <h3 class="f5 fw6 black-60 mb3">Brand Reputation Summary</h3>
-          <div class="overflow-auto">
-            <table class="collapse ba br2 b--black-10 pv2 ph3 w-100">
-              <thead>
-                <tr class="striped--near-white">
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Brand</th>
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Sentiment</th>
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Reputation</th>
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Risks</th>
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Keywords</th>
-                  <th class="pv2 ph3 tl f6 fw6 ttu">Entities</th>
-                </tr>
-              </thead>
-              <tbody class="lh-copy">
-                {% for result in results %}
-                  <tr>
-                    <td class="pv2 ph3">{{ result[0] }}</td>
-                    <td class="pv2 ph3 {% if 'Positive' in result[2] %}green{% elif 'Negative' in result[2] %}red{% endif %}">{{ result[2] }}</td>
-                    <td class="pv2 ph3">{{ result[6] }}</td>
-                    <td class="pv2 ph3 {% if '⚠️' in result[3] %}red{% endif %}">{{ result[3] }}</td>
-                    <td class="pv2 ph3">{{ result[4] }}</td>
-                    <td class="pv2 ph3">{{ result[5] }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="mt4">
-            <h4 class="f5 fw6 mb2">Summaries and Sources</h4>
-            {% for result in results %}
-              <div class="mb3">
-                <h5 class="f6 fw6 mb1">{{ result[0] }}</h5>
-                <p class="f6 black-70"><strong>Summary:</strong> {{ result[1] }}</p>
-                {% if result[7] %}
-                  <p class="f6 black-70"><strong>Sources:</strong><br><pre class="pre-wrap">{{ result[7] }}</pre></p>
-                {% endif %}
-                {% if result[8] %}
-                  <p class="f6 black-70"><strong>Recent News:</strong><br><pre class="pre-wrap">{{ result[8] }}</pre></p>
-                {% endif %}
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
     </main>
   </div>
 </body>
