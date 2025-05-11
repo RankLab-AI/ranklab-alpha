@@ -17,65 +17,61 @@
 
     <!-- Main Content -->
     <main class="flex-auto pa4">
-      <div class="flex justify-between items-center mb4">
-        <h2 class="header black-80">🔍 Query Search</h2>
-        <span class="f6 gray">Explore and expand keyword intent using conversational queries.</span>
+      <div class="mb4">
+        <h2 class="header black-80 flex items-center">
+          <i class="material-icons-outlined mr1">search</i>
+          Query Search
+        </h2>
+        <span class="f6 gray db">Explore and expand keyword intent using conversational queries.</span>
       </div>
 
-      <div class="flex justify-between items-center mb3">
-        <input type="text" placeholder="Search queries..." class="input-reset pa2 br2 b--black-20 mr2 w-50">
-        <button class="btn-secondary"><i class="material-icons-outlined v-mid">filter_alt</i> Filter</button>
-      </div>
-
-      <form>
-        <ol class="list-reset">
-          <li class="mb3">
-            <label class="f6 db mb1" for="keyword">Enter your target keyword</label>
-            <input id="keyword" type="text" value="how to build a blog" class="w-100 pa2 br2 b--black-20">
-          </li>
-          <li class="mb3">
-            <details>
-              <summary class="cursor-pointer f6 fw6">More Settings</summary>
-              <div class="mt2">
-                <label class="f6 db mb1" for="language">Language</label>
-                <select id="language" class="w-100 pa2 br2 b--black-20">
-                  <option value="en">English</option>
-                  <option value="fr">French</option>
-                </select>
-              </div>
-            </details>
-          </li>
-        </ol>
-
-        <button class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray w-100">Create Content</button>
+      <form method="post" action="/query-search" class="mb3 flex items-center">
+        <input
+          name="topic"
+          type="text"
+          placeholder="Enter topic..."
+          value="{{ topic or '' }}"
+          class="input-reset pa2 br2 b--black-20 mr2 w-50"
+          required
+        />
+        <button type="submit" class="btn-secondary br2 ph3 pv2 flex items-center">
+          <i class="material-icons-outlined v-mid mr1">search</i> Search
+        </button>
       </form>
 
-      <div class="mt4 overflow-auto">
-        <table class="collapse ba br2 b--black-10 w-100">
-          <thead>
-            <tr class="striped--near-white">
-              <th class="pv2 ph3 tl f6 fw6 ttu">#</th>
-              <th class="pv2 ph3 tl f6 fw6 ttu">Long Keyword</th>
-              <th class="pv2 ph3 tl f6 fw6 ttu">Title</th>
-              <th class="pv2 ph3 tl f6 fw6 ttu">Search Type</th>
-            </tr>
-          </thead>
-          <tbody class="lh-copy">
-            <tr>
-              <td class="pv2 ph3">1</td>
-              <td class="pv2 ph3"><mark>how to start a successful blog from scratch</mark></td>
-              <td class="pv2 ph3">Starting a Successful Blog from Scratch</td>
-              <td class="pv2 ph3">Informational</td>
-            </tr>
-            <tr>
-              <td class="pv2 ph3">2</td>
-              <td class="pv2 ph3"><mark>step by step guide to creating a blog</mark></td>
-              <td class="pv2 ph3">Step-by-Step Guide to Creating a Blog</td>
-              <td class="pv2 ph3">Informational</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {% if error %}
+        <div class="red f6 mb3">{{ error }}</div>
+      {% endif %}
+
+      {% if topic %}
+        {% if related_queries %}
+          <div class="mt4">
+            <h3 class="f4 fw6 mb3">Related Queries for "<mark>{{ topic }}</mark>":</h3>
+            <ul class="list pl3">
+              {% for i in range(related_queries|length) %}
+                <li class="mb2">
+                  <span class="fw6">{{ related_queries[i] }}</span>
+                  <span class="ml2 bg-gold white f7 br2 ph2 pv1">{{ intent_labels[i] }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if missing_topics %}
+          <div class="mt4">
+            <h4 class="f5 fw6 mb3">Missing Topics:</h4>
+            <div class="flex flex-wrap gap3">
+              {% for missing in missing_topics %}
+                <div class="bg-white pa3 br2 shadow-card mb3 w5">
+                  <div class="f6 fw6 black-80">{{ missing.topic }}</div>
+                  <div class="f7 gray">Score: {{ "%.2f"|format(missing.score) }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
     </main>
   </div>
 </body>
