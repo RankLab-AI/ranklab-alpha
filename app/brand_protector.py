@@ -6,7 +6,6 @@ import time
 from dotenv import load_dotenv
 from typing import List
 import matplotlib.pyplot as plt
-import groq
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -177,26 +176,26 @@ def generate_llm_txt(
     llm_txt += "\n"
     return llm_txt
 
+
 # Bubble Chart Function
 def run_brand_comparison_chart():
     brands = input("🔠 Paste your comma-separated brand names: ").split(",")
     brands = [b.strip() for b in brands if b.strip()]
 
-    topics = input("🔍 Enter 1–2 topics you'd like to compare brands on (comma-separated): ").split(",")
+    topics = input("🔍 Enter 1–2 topics you'd like to compare brands on (comma-separated): ").split(
+        ","
+    )
     topics = [t.strip() for t in topics if t.strip()]
     print(f"\n✨ Analyzing brands: {brands}")
     print(f"📊 Topics: {topics}")
 
     prompts = {
-        topic: f"List the top 10 brands for {topic}. Just give a clean list."
-        for topic in topics
+        topic: f"List the top 10 brands for {topic}. Just give a clean list." for topic in topics
     }
 
     def ask_groq(prompt):
         response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
+            model="llama3-8b-8192", messages=[{"role": "user", "content": prompt}], temperature=0.7
         )
         return response.choices[0].message.content
 
@@ -215,14 +214,16 @@ def run_brand_comparison_chart():
                     scores[brand][topic] += rank_score
 
         for brand in brands:
-            if brand.lower() in reply.lower() and all(brand.lower() not in l.lower() for l in lines[:10]):
+            if brand.lower() in reply.lower() and all(
+                brand.lower() not in l.lower() for l in lines[:10]
+            ):
                 scores[brand][topic] += 0.5
 
     x = []
     y = []
     sizes = []
     labels = []
-    colors = ['#ff5733' if brand.lower() == "ranklab ai" else '#00bfff' for brand in brands]
+    colors = ["#ff5733" if brand.lower() == "ranklab ai" else "#00bfff" for brand in brands]
 
     topic1, topic2 = topics[0], topics[1] if len(topics) > 1 else topics[0]
 
@@ -233,13 +234,12 @@ def run_brand_comparison_chart():
         labels.append(brand)
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(x, y, s=sizes, c=colors, alpha=0.7, edgecolors='k')
+    plt.scatter(x, y, s=sizes, c=colors, alpha=0.7, edgecolors="k")
     for i, label in enumerate(labels):
-        plt.text(x[i], y[i], label, fontsize=9, ha='center')
+        plt.text(x[i], y[i], label, fontsize=9, ha="center")
     plt.xlabel(topic1)
     plt.ylabel(topic2)
     plt.title("Brand Comparison Bubble Chart")
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-
