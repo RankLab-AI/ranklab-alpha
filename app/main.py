@@ -190,17 +190,10 @@ async def brand_guard_page(request: Request):
         "brand_protector.html",
         {
             "request": request,
-            # empty defaults for all fields:
+            # only pass form defaults:
             "main_brand": "",
             "competitors": "",
-            "agents": "",
-            "allow_paths": "",
-            "disallow_paths": "",
-            "cite_as": "",
             "policy": "",
-            # no results yet:
-            "tables": None,
-            "robots_txts": None,
         },
     )
 
@@ -229,10 +222,9 @@ async def brand_protector_run(
 
     # run analysis for each brand
     html_table = None
-    llm_txt = None
 
     comps = [c.strip() for c in competitors.split(",") if c.strip()]
-    html_table, llm_txt = run_brand_analysis(
+    html_table = run_brand_analysis(
         brand=main_brand.strip(),
         competitors=comps,
         agents=agents_list,
@@ -242,15 +234,14 @@ async def brand_protector_run(
         policy=", ".join(custom_risks),
     )
 
-    logging.debug(f"llem+text || {llm_txt}")
+    logging.debug(f"Brand analysis completed")
 
-    # render template with both the generated HTML tables and the LLM text blocks
+    # render template with the generated HTML tables only
     return templates.TemplateResponse(
         "brand_protector.html",
         {
             "request": request,
-            "table": html_table,
-            "llm_txt": llm_txt,
+            "tables": html_table,
         },
     )
 
@@ -388,6 +379,44 @@ async def content_lab_page(
             "selected_method": method,
             "methods": available_methods,
             "scores": scores,
+        },
+    )
+
+
+@app.get("/edit-llm-txt", response_class=HTMLResponse)
+async def edit_llm_txt_page(request: Request):
+    """
+    Render the LLM text editing form with empty defaults.
+    """
+    return templates.TemplateResponse(
+        "edit_llm_txt.html",
+        {
+            "request": request,
+            "input_text": "",
+            "parameters": "",
+        },
+    )
+
+
+@app.post("/generate-llm-txt", response_class=HTMLResponse)
+async def generate_llm_txt(
+    request: Request, input_text: str = Form(...), parameters: str = Form("")
+):
+    """
+    Generate LLM text based on form inputs and render the result.
+    """
+    try:
+        generated_text = generate_venice_response(input_text)
+    except Exception as e:
+        generated_text = f"⚠️ Error generating text: {str(e)}"
+
+    return templates.TemplateResponse(
+        "generate_llm_txt.html",
+        {
+            "request": request,
+            "input_text": input_text,
+            "parameters": parameters,
+            "generated_text": generated_text,
         },
     )
 
