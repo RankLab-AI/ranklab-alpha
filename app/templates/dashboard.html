@@ -5,92 +5,81 @@
   <title>Dashboard – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon.png" />
-  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
-  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
 </head>
 
-<body class="bg-near-white">
-  <div class="flex">
+<body class="bg-gray-50">
+  <div class="flex min-h-screen">
     {% include "partials/sidebar.html" %}
-    <main class="flex-auto pa4">
-      <div class="flex justify-between items-center mb4">
-        <h1 class="f3 fw6">Dashboard</h1>
-        <button class="br2 ph3 pv2 bg-blue white b--blue">🔁 Set Weekly Alerts</button>
+    <main class="flex-1 p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold">Dashboard</h1>
+        <button class="rounded-md px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 flex items-center space-x-2">
+          <span>🔁</span><span>Set Weekly Alerts</span>
+        </button>
       </div>
 
       <!-- 3-column grid -->
-      <div class="flex flex-wrap -ml3">
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa3 br3 shadow-1 h-100 flex flex-column">
-            <h2 class="f4 fw6 mb3">Notifications & Insights</h2>
-            <ul class="list pl0 ml0 mb3">
-              <li class="green">✔️ +5 pages optimized this week</li>
-              <li class="green">📈 Avg. GEO score improved by 12%</li>
-              <li class="red">🔔 New LLM mention detected for your brand</li>
-              <li class="red">🔔 Competitor outranking on 3 keywords</li>
-            </ul>
-            <button class="mt-auto br2 ph3 pv2 bg-light-gray black">View All</button>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <section class="bg-white p-6 rounded-lg shadow flex flex-col">
+          <h2 class="text-lg font-semibold mb-4">Notifications & Insights</h2>
+          <ul class="space-y-2 flex-1">
+            <li class="text-green-600 flex items-center space-x-2"><span>✔️</span><span>+5 pages optimized this week</span></li>
+            <li class="text-green-600 flex items-center space-x-2"><span>📈</span><span>Avg. GEO score improved by 12%</span></li>
+            <li class="text-red-600 flex items-center space-x-2"><span>🔔</span><span>New LLM mention detected for your brand</span></li>
+            <li class="text-red-600 flex items-center space-x-2"><span>🔔</span><span>Competitor outranking on 3 keywords</span></li>
+          </ul>
+          <button class="mt-auto rounded-md px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 self-start">View All</button>
+        </section>
 
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa3 br3 shadow-1 h-100 flex flex-column items-center justify-center">
-            <h2 class="f4 fw6 mb3">Total Pages Audited</h2>
-            <canvas id="pagesChart" width="300" height="200"></canvas>
-            <p class="f6 black-60 mt3 tc">Pages Optimized vs Needs Improvement</p>
-          </div>
-        </div>
+        <section class="bg-white p-6 rounded-lg shadow flex flex-col items-center justify-center">
+          <h2 class="text-lg font-semibold mb-4">Total Pages Audited</h2>
+          <canvas id="pagesChart" width="300" height="200"></canvas>
+          <p class="text-gray-600 mt-4 text-center text-sm">Pages Optimized vs Needs Improvement</p>
+        </section>
 
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa3 br3 shadow-1 h-100">
-            <h2 class="f4 fw6 mb3">Recent Actions</h2>
-            <ul class="list pl0 ml0">
-              <li class="mv2"><label><input type="checkbox" /> Audit blog homepage</label></li>
-              <li class="mv2"><label><input type="checkbox" /> Fix low GEO score landing page</label></li>
-              <li class="mv2"><label><input type="checkbox" /> Regenerate product descriptions with LLM</label></li>
-              <li class="mv2"><label><input type="checkbox" /> Review competitor snippet rankings</label></li>
-              <li class="mv2"><label><input type="checkbox" /> Update author schema on 3 articles</label></li>
-            </ul>
-          </div>
-        </div>
+        <section class="bg-white p-6 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-4">Recent Actions</h2>
+          <ul class="space-y-3">
+            <li><label class="inline-flex items-center space-x-2"><input type="checkbox" class="form-checkbox" /><span>Audit blog homepage</span></label></li>
+            <li><label class="inline-flex items-center space-x-2"><input type="checkbox" class="form-checkbox" /><span>Fix low GEO score landing page</span></label></li>
+            <li><label class="inline-flex items-center space-x-2"><input type="checkbox" class="form-checkbox" /><span>Regenerate product descriptions with LLM</span></label></li>
+            <li><label class="inline-flex items-center space-x-2"><input type="checkbox" class="form-checkbox" /><span>Review competitor snippet rankings</span></label></li>
+            <li><label class="inline-flex items-center space-x-2"><input type="checkbox" class="form-checkbox" /><span>Update author schema on 3 articles</span></label></li>
+          </ul>
+        </section>
       </div>
 
       <!-- Trends -->
-      <div class="bg-white pa3 br3 shadow-1 mb4">
-        <div class="flex justify-between items-center mb2">
-          <h2 class="f4 fw6">GEO & SEO Score Trends</h2>
-          <select class="pa2 br2 b--black-20">
+      <section class="bg-white p-6 rounded-lg shadow mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">GEO & SEO Score Trends</h2>
+          <select class="border border-gray-300 rounded-md p-2">
             <option>Last 30 days</option>
             <option>Last 60 days</option>
             <option>Custom</option>
           </select>
         </div>
         <canvas id="trendChart" width="600" height="200"></canvas>
-      </div>
+      </section>
 
       <!-- Bottom Tools -->
-      <div class="flex flex-wrap -ml3 mt4">
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
-            <button onclick="window.location.href='/brand-protector'" class="w-100 pa4 br3 bg-green white fw6 f5">
-              🟢 Brand Guard
-            </button>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-8 rounded-lg shadow flex items-center justify-center">
+          <button onclick="window.location.href='/brand-protector'" class="w-full py-4 rounded-lg bg-green-600 text-white font-semibold text-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+            <span>🟢</span><span>Brand Guard</span>
+          </button>
         </div>
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
-            <button onclick="window.location.href='/content-doctor'" class="w-100 pa4 br3 bg-light-purple white fw6 f5">
-              🟣 Content Doctor
-            </button>
-          </div>
+        <div class="bg-white p-8 rounded-lg shadow flex items-center justify-center">
+          <button onclick="window.location.href='/content-doctor'" class="w-full py-4 rounded-lg bg-purple-600 text-white font-semibold text-lg hover:bg-purple-700 flex items-center justify-center space-x-2">
+            <span>🟣</span><span>Content Doctor</span>
+          </button>
         </div>
-        <div class="w-100 w-50-m w-33-l pa3">
-          <div class="bg-white pa4 br3 shadow-1 h-100 flex items-center justify-center">
-            <button onclick="window.location.href='/query-research'" class="w-100 pa4 br3 bg-gold white fw6 f5">
-              🟠 Query Search
-            </button>
-          </div>
+        <div class="bg-white p-8 rounded-lg shadow flex items-center justify-center">
+          <button onclick="window.location.href='/query-research'" class="w-full py-4 rounded-lg bg-yellow-500 text-white font-semibold text-lg hover:bg-yellow-600 flex items-center justify-center space-x-2">
+            <span>🟠</span><span>Query Search</span>
+          </button>
         </div>
       </div>
     </main>
@@ -172,7 +161,6 @@
         }
       }
     });
-  </script>
-  </div>
+</script>
 </body>
 </html>
