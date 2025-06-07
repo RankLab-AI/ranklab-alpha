@@ -20,6 +20,7 @@ from app.utils import (
 )
 from app.generations import generate_venice_response
 from app.query_research import run_query_research_on_topic
+from app.config import COLORS, THEMES
 
 DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
 
@@ -30,7 +31,15 @@ logging.basicConfig(
 
 # Initialize FastAPI app
 app = FastAPI()
+
 templates = Jinja2Templates(directory="app/templates")
+
+# make theme config available in all templates
+templates.env.globals.update(
+    COLORS=COLORS,
+    THEMES=THEMES,
+    CURRENT_THEME=THEMES["light"],
+)
 
 # Mount static folder
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -134,7 +143,7 @@ async def handle_signup(email: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.post("/logout")
+@app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/login", status_code=303)
     response.delete_cookie("firebase_id_token")
