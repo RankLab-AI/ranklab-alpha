@@ -1,7 +1,6 @@
 /* Typography and Base */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f7f9fc;
   }
 
 /* Header Titles */
@@ -17,25 +16,11 @@ body {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* Sidebar */
-.sidebar {
-    min-height: 100vh;
-}
-
 /* Utility Shadows */
 .shadow-card {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Remove underline from all anchor tags inside sidebar */
-aside.sidebar a {
-    text-decoration: none !important;
-}
-
-/* Optional: also remove it on hover if needed */
-aside.sidebar a:hover {
-    text-decoration: none !important;
-}
 
 /* Custom Brand Protector styles */
 .pre-wrap {
@@ -48,8 +33,8 @@ aside.sidebar a:hover {
     color: #e74c3c;
 }
 
-.sidebar .material-icons-outlined {
+.sidebar-custom .material-icons-outlined {
     vertical-align: middle;
     margin-right: 0.5rem;
-    font-size: 18px;
+    font-size: 1.125rem;
 }
