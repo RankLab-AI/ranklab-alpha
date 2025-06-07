@@ -5,7 +5,7 @@
       <img src="/static/img/{{ CURRENT_THEME['logo_file'] }}" alt="RankLab AI Logo" class="h-10 object-contain">
     </div>
     <nav class="p-4 space-y-1">
-      <a href="/dashboard" class="flex items-center px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+      <a href="/dashboard" class="flex items-center px-4 py-2 rounded-md hover:bg-[{{ CURRENT_THEME.sidebar_hover }}] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
         <span class="material-icons-outlined mr-2">dashboard</span>
         Dashboard
       </a>
@@ -30,41 +30,13 @@
   <!-- Bottom Actions -->
   <div style="border-top: 1px solid {{ CURRENT_THEME.sidebar_border }};" class="p-4">
     <div class="flex items-center justify-between mb-4">
-      <a href="/logout"
-         class="flex-1 px-4 py-2 text-sm text-center rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)]"
-         style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+      <a href="/logout" class="flex-1 px-4 py-2 text-sm text-center rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)]" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
         Logout
       </a>
-      <button onclick="toggleTheme()" class="relative inline-flex items-center h-6 w-12 rounded-full transition bg-gray-300 dark:bg-gray-700 ml-2">
-        <span class="sr-only">Toggle dark mode</span>
-        <span id="themeKnob" class="inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform duration-300 ease-in-out"></span>
-      </button>
     </div>
     <div class="text-xs text-center leading-tight" style="color: {{ CURRENT_THEME.sidebar_text }};">
       © 2025 RankLab AI<br/>
       Visibility‑First LLM Tools
     </div>
   </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const isDark = localStorage.getItem("theme") === "dark";
-      const root = document.documentElement;
-      const knob = document.getElementById("themeKnob");
-      if (isDark) {
-        root.classList.add("dark");
-        knob?.classList.add("translate-x-6");
-      } else {
-        root.classList.remove("dark");
-        knob?.classList.remove("translate-x-6");
-      }
-    });
-    function toggleTheme() {
-      const root = document.documentElement;
-      const knob = document.getElementById("themeKnob");
-      const isDark = root.classList.toggle("dark");
-      knob?.classList.toggle("translate-x-6");
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-    }
-  </script>
 </aside>
