@@ -1,44 +1,70 @@
-<aside class="sidebar w6 bg-white pa3 shadow-card" style="width: 320px; min-height: 100vh; min-width: 18rem;">
-  <div class="mb4 tc">
-    <img src="/static/img/logo.png" class="h3 center" alt="RankLab AI Logo" />
-    <div class="f7 gray mt2 tc tracked">
-      Built for Visibility in the Age of LLMs
+<aside class="sticky top-0 h-screen overflow-y-auto w-80 bg-[color:{{ CURRENT_THEME['sidebar_border'] }}] shadow-xl flex flex-col justify-between" style="border-right: 1px solid {{ CURRENT_THEME.sidebar_border }};">
+  <!-- Logo & Tagline -->
+  <div>
+    <div class="h-20 flex items-center justify-center px-4" style="border-bottom: 1px solid {{ CURRENT_THEME.sidebar_border }};">
+      <img src="/static/img/{{ CURRENT_THEME['logo_file'] }}" alt="RankLab AI Logo" class="h-10 object-contain">
     </div>
-  </div>
-  <nav class="f6 flex flex-column">
-      <a href="/dashboard" class="db pa2 black-80 hover-bg-light-gray br2 flex items-center">
-        <span class="material-icons-outlined mr2 v-mid">dashboard</span>
+    <nav class="p-4 space-y-1">
+      <a href="/dashboard" class="flex items-center px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+        <span class="material-icons-outlined mr-2">dashboard</span>
         Dashboard
       </a>
-
-      <a href="/brand-protector" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
-        <span class="flex items-center">
-          <span class="material-icons-outlined mr2 v-mid">security</span>
-          Brand Guard
-        </span>
-        <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
+      <a href="/brand-protector" class="flex items-center px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+        <span class="material-icons-outlined mr-2">security</span>
+        Brand Guard
+        <span class="ml-auto bg-gold text-off-white text-xs uppercase tracking-wide px-2 py-0.5 rounded">New</span>
       </a>
-
-      <a href="/content-doctor" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
-        <span class="flex items-center">
-          <span class="material-icons-outlined mr2 v-mid">medical_information</span>
-            Content Doctor
-          </span>
-        <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
+      <a href="/content-doctor" class="flex items-center px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+        <span class="material-icons-outlined mr-2">medical_information</span>
+        Content Doctor
+        <span class="ml-auto bg-gold text-off-white text-xs uppercase tracking-wide px-2 py-0.5 rounded">New</span>
       </a>
+      <a href="/llm-txt" class="flex items-center px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)] font-medium" style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
+        <span class="material-icons-outlined mr-2">rule</span>
+        Generate LLM Rules
+        <span class="ml-auto bg-gold text-off-white text-xs uppercase tracking-wide px-2 py-0.5 rounded">New</span>
+      </a>
+    </nav>
+  </div>
 
-    <a href="/llm-txt" class="db pa2 black-80 hover-bg-light-gray br2 flex justify-between items-center">
-      <span class="flex items-center">
-        <span class="material-icons-outlined mr2 v-mid">rule</span>
-          Generate LLM Rules
-        </span>
-        <span class="ml2 bg-gold white f7 br2 ph2 pv1">NEW</span>
-    </a>
-
-    <form action="/logout" method="post" class="mt4">
-      <button type="submit" class="f6 link dim br2 ba ph3 pv2 mb2 dib w-100 bg-light-purple">
+  <!-- Bottom Actions -->
+  <div style="border-top: 1px solid {{ CURRENT_THEME.sidebar_border }};" class="p-4">
+    <div class="flex items-center justify-between mb-4">
+      <a href="/logout"
+         class="flex-1 px-4 py-2 text-sm text-center rounded-md hover:bg-[var(--hover-bg)] dark:hover:bg-[var(--hover-bg)]"
+         style="color: {{ CURRENT_THEME.sidebar_text }}; --hover-bg: {{ CURRENT_THEME.sidebar_hover }};">
         Logout
+      </a>
+      <button onclick="toggleTheme()" class="relative inline-flex items-center h-6 w-12 rounded-full transition bg-gray-300 dark:bg-gray-700 ml-2">
+        <span class="sr-only">Toggle dark mode</span>
+        <span id="themeKnob" class="inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform duration-300 ease-in-out"></span>
       </button>
-    </form>
-  </nav>
+    </div>
+    <div class="text-xs text-center leading-tight" style="color: {{ CURRENT_THEME.sidebar_text }};">
+      © 2025 RankLab AI<br/>
+      Visibility‑First LLM Tools
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const isDark = localStorage.getItem("theme") === "dark";
+      const root = document.documentElement;
+      const knob = document.getElementById("themeKnob");
+      if (isDark) {
+        root.classList.add("dark");
+        knob?.classList.add("translate-x-6");
+      } else {
+        root.classList.remove("dark");
+        knob?.classList.remove("translate-x-6");
+      }
+    });
+    function toggleTheme() {
+      const root = document.documentElement;
+      const knob = document.getElementById("themeKnob");
+      const isDark = root.classList.toggle("dark");
+      knob?.classList.toggle("translate-x-6");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+  </script>
 </aside>
