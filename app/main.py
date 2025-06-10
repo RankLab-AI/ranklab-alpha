@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from firebase_admin import credentials, initialize_app, auth
 import uvicorn
 
-from app.brand_protector import run_brand_analysis
+from app.brand_protector import run_brand_analysis, generate_llm_txt
 from app.scoring import compute_scores
 from app.treatments.apply import apply_treatment
 from app.traffic_predictor import predict_llm_traffic
@@ -18,7 +18,6 @@ from app.utils import (
     verify_firebase_token,
     FIREBASE_JS_CONFIG,
 )
-from app.generations import generate_venice_response
 from app.query_research import run_query_research_on_topic
 from app.config import COLORS, THEMES
 
@@ -401,31 +400,39 @@ async def edit_llm_txt_page(request: Request):
         "llm_txt.html",
         {
             "request": request,
-            "input_text": "",
-            "parameters": "",
         },
     )
 
 
 @app.post("/generate-llm-txt", response_class=HTMLResponse)
-async def generate_llm_txt(
-    request: Request, input_text: str = Form(...), parameters: str = Form("")
+async def generate_llm_txt_route(
+    request: Request,
+    agents: str = Form(""),
+    allow_paths: str = Form(""),
+    disallow_paths: str = Form(""),
+    cite_as: str = Form(""),
+    policy: str = Form(""),
 ):
-    """
-    Generate LLM text based on form inputs and render the result.
-    """
+    agents_list = [a.strip() for a in agents.split(",") if a.strip()]
+    allow_list = [p.strip() for p in allow_paths.split(",") if p.strip()]
+    disallow_list = [p.strip() for p in disallow_paths.split(",") if p.strip()]
+
     try:
-        generated_text = generate_venice_response(input_text)
+        llm_txt = generate_llm_txt(
+            agents=agents_list,
+            allow_paths=allow_list,
+            disallow_paths=disallow_list,
+            cite_as=cite_as,
+            policy=policy,
+        )
     except Exception as e:
-        generated_text = f"⚠️ Error generating text: {str(e)}"
+        llm_txt = f"⚠️ Error generating text: {str(e)}"
 
     return templates.TemplateResponse(
-        "generate_llm_txt.html",
+        "llm_txt.html",
         {
             "request": request,
-            "input_text": input_text,
-            "parameters": parameters,
-            "generated_text": generated_text,
+            "llm_txt": llm_txt,
         },
     )
 
