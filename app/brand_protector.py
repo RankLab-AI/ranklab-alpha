@@ -116,7 +116,7 @@ def run_brand_analysis(
     cite_as: str = "",
     policy: str = "",
 ):
-    logging.debug("[bold green]=== BrandGuard: LLM Insight Tool ===[/bold green]\n")
+    logging.info("[bold green]=== BrandGuard: LLM Insight Tool ===[/bold green]\n")
 
     # Normalize competitors input to a list
     if isinstance(competitors, str):
@@ -145,11 +145,11 @@ def run_brand_analysis(
         all_infos.append(brand_info)
         time.sleep(2)
 
-    logging.debug("\n[bold green]=== Brand Summary Comparison ===[/bold green]\n")
+    logging.info(f"\n[bold green]=== Brand Summary Comparison ===[/bold green]\n {all_infos}")
     res_table = generate_html_table(all_infos)
-    llm_txt = generate_llm_txt(agents, allow_paths, disallow_paths, cite_as, policy)
+    # llm_txt = generate_llm_txt(agents, allow_paths, disallow_paths, cite_as, policy)
 
-    return res_table, llm_txt
+    return res_table
 
 
 def generate_llm_txt(
