@@ -250,7 +250,7 @@ async def brand_protector_run(
         "brand_protector.html",
         {
             "request": request,
-            "tables": html_table,
+            "analysis": html_table,
         },
     )
 
@@ -398,7 +398,7 @@ async def edit_llm_txt_page(request: Request):
     Render the LLM text editing form with empty defaults.
     """
     return templates.TemplateResponse(
-        "edit_llm_txt.html",
+        "llm_txt.html",
         {
             "request": request,
             "input_text": "",
