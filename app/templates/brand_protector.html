@@ -5,131 +5,83 @@
   <title>Brand Guard – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon.png" />
-  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 
-<body class="bg-near-white">
-  <div class="flex">
+<body class="bg-gray-50">
+  <div class="flex min-h-screen overflow-hidden">
     <!-- Sidebar -->
     {% include "partials/sidebar.html" %}
 
     <!-- Main Content -->
-    <main class="flex-auto pa4">
-      <div class="mb4">
+    <main class="flex-1 p-10 overflow-auto max-w-full">
+      <div class="mb-4">
         <h2 class="header black-80">
           <span class="material-icons-outlined mr2 v-mid">security</span> Brand Guard
         </h2>
         <span class="f6 gray">Get AI-driven insights on your brand, keywords, criticisms, and alternatives.</span>
       </div>
 
-      {% if table %}
+      {% if analysis %}
         <div class="mt4">
           <h3 class="f5 fw6 black-60 mb3">Brand Reputation Summary</h3>
-          <div class="overflow-auto mb4">
-            {{ table|safe }}
-          </div>
-        </div>
-      {% endif %}
-
-      {% if llm_txt %}
-        <div class="mt4">
-          <h4 class="f5 fw6 mb2">Generated LLM.TXT Blocks</h4>
-            <div class="bg-black-05 pa3 br2 mb3">
-              <pre class="f6 code grey-90">{{ llm_txt }}</pre>
+          <div class="mb4 overflow-auto rounded border border-gray-200">
+            <div class="w-full max-w-full overflow-x-auto">
+              <div class="table-wrapper table-fixed w-full text-sm">
+                {{ analysis|safe }}
+              </div>
             </div>
+          </div>
+        </div>
+        <div class="my-6 border-t border-gray-300 pt-6">
+          <h4 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Run a new analysis</h4>
+          <p class="text-sm text-gray-500 mb-4">Update your brand or competitors to generate a fresh analysis.</p>
         </div>
       {% endif %}
 
-      <form method="post" action="/brand-protector" class="mb4">
-        <div class="mb3">
-          <label class="f5 db mb2">Your Brand</label>
-          <input
-            type="text"
-            name="main_brand"
-            class="input-reset pa2 br2 b--black-20 w-100"
-            placeholder="Enter your brand name"
-            required
-            value="{{ main_brand or '' }}"
-          >
+      {% if not analysis %}
+        <form method="post" action="/brand-protector" class="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div class="mb-3">
+            <label class="f5 db mb2">Your Brand</label>
+            <input
+              type="text"
+              name="main_brand"
+              class="input-reset p-2 rounded border-gray-300 w-full"
+              placeholder="Enter your brand name"
+              required
+              value="{{ main_brand or '' }}"
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="f5 db mb2">Competitor Brands</label>
+            <input
+              type="text"
+              name="competitors"
+              class="input-reset p-2 rounded border-gray-300 w-full"
+              placeholder="Enter competitors (comma-separated)"
+              value="{{ competitors or '' }}"
+            >
+          </div>
+
+          <button type="submit"
+                  class="rounded-lg px-4 py-2 text-base font-semibold text-white hover:opacity-90"
+                  style="background-color: {{  CURRENT_THEME['primary']  }};">
+            Analyze Brands
+          </button>
+        </form>
+      {% endif %}
+
+      {% if analysis %}
+        <div class="mt-8">
+          <a href="/brand-protector" class="inline-block rounded-lg px-5 py-3 text-base font-semibold text-white" style="background-color: {{ CURRENT_THEME['primary'] }};">
+            Restart
+          </a>
         </div>
-
-        <div class="mb3">
-          <label class="f5 db mb2">Competitor Brands</label>
-          <input
-            type="text"
-            name="competitors"
-            class="input-reset pa2 br2 b--black-20 w-100"
-            placeholder="Enter competitors (comma-separated)"
-            value="{{ competitors or '' }}"
-          >
-        </div>
-
-        <details class="mb3 pa3 ba b--black-10 br2">
-          <summary class="f5 fw6 pointer">LLM.TXT Generation Settings (optional)</summary>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Agents</label>
-            <input
-              type="text"
-              name="agents"
-              class="input-reset pa2 br2 b--black-20 w-100"
-              placeholder="Agent names (comma-separated)"
-              value="{{ agents or '' }}"
-            >
-          </div>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Allow Paths</label>
-            <input
-              type="text"
-              name="allow_paths"
-              class="input-reset pa2 br2 b--black-20 w-100"
-              placeholder="/public, /images, ..."
-              value="{{ allow_paths or '' }}"
-            >
-          </div>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Disallow Paths</label>
-            <input
-              type="text"
-              name="disallow_paths"
-              class="input-reset pa2 br2 b--black-20 w-100"
-              placeholder="/private, /admin, ..."
-              value="{{ disallow_paths or '' }}"
-            >
-          </div>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Cite As</label>
-            <input
-              type="text"
-              name="cite_as"
-              class="input-reset pa2 br2 b--black-20 w-100"
-              placeholder="e.g., ‘Acme Corp.’"
-              value="{{ cite_as or '' }}"
-            >
-          </div>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Policy Keywords</label>
-            <input
-              type="text"
-              name="policy"
-              class="input-reset pa2 br2 b--black-20 w-100"
-              placeholder="e.g., reputation, sentiment, risk"
-              value="{{ policy or '' }}"
-            >
-          </div>
-        </details>
-
-        <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
-          Analyze Brands
-        </button>
-      </form>
+      {% endif %}
     </main>
   </div>
 </body>
