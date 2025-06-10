@@ -38,3 +38,14 @@ body {
     margin-right: 0.5rem;
     font-size: 1.125rem;
 }
+
+.table-wrapper table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table-wrapper td,
+.table-wrapper th {
+    word-wrap: break-word;
+    white-space: normal;
+}
