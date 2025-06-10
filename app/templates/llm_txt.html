@@ -1,135 +1,127 @@
-app/templates/brand_protector.html<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Brand Guard – RankLab AI</title>
+  <title>LLM Rules – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon.png" />
-  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
-  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 
-<body class="bg-near-white">
+<body class="bg-gray-50 min-h-screen">
   <div class="flex">
     <!-- Sidebar -->
     {% include "partials/sidebar.html" %}
 
     <!-- Main Content -->
-    <main class="flex-auto pa4">
-      <div class="mb4">
+    <main class="flex-1 p-6">
+      <div class="mb-6">
         <h2 class="header black-80">
-          <span class="material-icons-outlined mr2 v-mid">security</span> Brand Guard
+          <span class="material-icons-outlined mr-2 align-middle">rule</span> LLM.TXT Generation Settings
         </h2>
-        <span class="f6 gray">Get AI-driven insights on your brand, keywords, criticisms, and alternatives.</span>
+        <span class="text-sm text-gray-500">Get AI-driven insights on your brand, keywords, criticisms, and alternatives.</span>
       </div>
 
-      {% if table %}
-        <div class="mt4">
-          <h3 class="f5 fw6 black-60 mb3">Brand Reputation Summary</h3>
-          <div class="overflow-auto mb4">
-            {{ table|safe }}
-          </div>
-        </div>
-      {% endif %}
 
-      {% if llm_txt %}
-        <div class="mt4">
-          <h4 class="f5 fw6 mb2">Generated LLM.TXT Blocks</h4>
-            <div class="bg-black-05 pa3 br2 mb3">
-              <pre class="f6 code grey-90">{{ llm_txt }}</pre>
-            </div>
-        </div>
-      {% endif %}
-
-      <form method="post" action="/brand-protector" class="mb4">
-        <div class="mb3">
-          <label class="f5 db mb2">Your Brand</label>
-          <input
-            type="text"
-            name="main_brand"
-            class="input-reset pa2 br2 b--black-20 w-100"
-            placeholder="Enter your brand name"
-            required
-            value="{{ main_brand or '' }}"
-          >
-        </div>
-
-        <div class="mb3">
-          <label class="f5 db mb2">Competitor Brands</label>
-          <input
-            type="text"
-            name="competitors"
-            class="input-reset pa2 br2 b--black-20 w-100"
-            placeholder="Enter competitors (comma-separated)"
-            value="{{ competitors or '' }}"
-          >
-        </div>
-
-        <details class="mb3 pa3 ba b--black-10 br2">
-          <summary class="f5 fw6 pointer">LLM.TXT Generation Settings (optional)</summary>
-
-          <div class="mt3">
-            <label class="f5 db mb2">Agents</label>
+      <form method="post" action="/generate-llm-txt" class="mb-8 bg-white p-6 rounded-xl border border-gray-300 shadow-lg">
+          <div class="mt-3">
+            <label class="text-lg block mb-2">Agents</label>
             <input
               type="text"
               name="agents"
-              class="input-reset pa2 br2 b--black-20 w-100"
+              class="w-full p-2 border border-gray-300 rounded"
               placeholder="Agent names (comma-separated)"
               value="{{ agents or '' }}"
             >
           </div>
 
-          <div class="mt3">
-            <label class="f5 db mb2">Allow Paths</label>
+          <div class="mt-3">
+            <label class="text-lg block mb-2">Allow Paths</label>
             <input
               type="text"
               name="allow_paths"
-              class="input-reset pa2 br2 b--black-20 w-100"
+              class="w-full p-2 border border-gray-300 rounded"
               placeholder="/public, /images, ..."
               value="{{ allow_paths or '' }}"
             >
           </div>
 
-          <div class="mt3">
-            <label class="f5 db mb2">Disallow Paths</label>
+          <div class="mt-3">
+            <label class="text-lg block mb-2">Disallow Paths</label>
             <input
               type="text"
               name="disallow_paths"
-              class="input-reset pa2 br2 b--black-20 w-100"
+              class="w-full p-2 border border-gray-300 rounded"
               placeholder="/private, /admin, ..."
               value="{{ disallow_paths or '' }}"
             >
           </div>
 
-          <div class="mt3">
-            <label class="f5 db mb2">Cite As</label>
+          <div class="mt-3">
+            <label class="text-lg block mb-2">Cite As</label>
             <input
               type="text"
               name="cite_as"
-              class="input-reset pa2 br2 b--black-20 w-100"
+              class="w-full p-2 border border-gray-300 rounded"
               placeholder="e.g., ‘Acme Corp.’"
               value="{{ cite_as or '' }}"
             >
           </div>
 
-          <div class="mt3">
-            <label class="f5 db mb2">Policy Keywords</label>
+          <div class="mt-3">
+            <label class="text-lg block mb-2">Policy Keywords</label>
             <input
               type="text"
               name="policy"
-              class="input-reset pa2 br2 b--black-20 w-100"
+              class="w-full p-2 border border-gray-300 rounded"
               placeholder="e.g., reputation, sentiment, risk"
               value="{{ policy or '' }}"
             >
           </div>
-        </details>
 
-        <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
-          Analyze Brands
-        </button>
+        <div class="mt-6">
+          <button type="submit"
+                  class="inline-block rounded-lg px-5 py-3 text-base font-semibold text-white"
+                  style="background-color: {{ CURRENT_THEME['primary'] }};">
+            Generate
+          </button>
+        </div>
       </form>
+
+      {% if llm_txt %}
+        <div class="mt-10 bg-white p-6 rounded-xl border border-gray-300 shadow-md">
+          <!-- Toast notification for copy -->
+          <div id="copy-toast" style="display: none; background-color: #DCFCE7; color: #166534; font-size: 0.875rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+            ✅ Copied to clipboard
+          </div>
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-800">Generated LLM.TXT</h4>
+              <p class="text-sm text-gray-500 mt-1">You can modify the settings above and regenerate this file anytime.</p>
+            </div>
+            <button onclick="copyToClipboard()" style="margin-left: 1rem; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; border: 1px solid {{ CURRENT_THEME['primary'] }}; color: {{ CURRENT_THEME['primary'] }}; display: flex; align-items: center; gap: 0.25rem;">
+              <span class="material-icons-outlined" style="font-size: 1rem;">content_copy</span>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="bg-gray-100 p-4 rounded overflow-x-auto">
+            <pre id="llm-output" class="text-sm font-mono text-gray-900 whitespace-pre-wrap">{{ llm_txt }}</pre>
+          </div>
+        </div>
+        <script>
+          function copyToClipboard() {
+            const text = document.getElementById('llm-output').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+              const toast = document.getElementById('copy-toast');
+              toast.style.display = 'block';
+              setTimeout(() => {
+                toast.style.display = 'none';
+              }, 2000);
+            });
+          }
+        </script>
+      {% endif %}
     </main>
   </div>
 </body>
