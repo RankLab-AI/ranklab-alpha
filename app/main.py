@@ -19,6 +19,7 @@ from app.utils import (
     FIREBASE_JS_CONFIG,
 )
 from app.query_research import run_query_research_on_topic
+from app.generations import generate_venice_response
 from app.config import COLORS, THEMES
 
 DEFAULT_RISK_KEYWORDS = ["reputation", "sentiment", "risk"]
