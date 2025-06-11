@@ -14,7 +14,7 @@ query_prompt = """Write an accurate and concise answer for the given user questi
 
 
 def generate_llm_answer(
-    query, sources, num_completions=1, temperature=0.5, verbose=False, model="llama-3.2-3b"
+    query, sources, num_completions=1, temperature=0.5, verbose=False, model="llama-3.3-70b"
 ):
     source_text = "\n\n".join([f"### Source {i + 1}:\n{s}" for i, s in enumerate(sources)])
     prompt = query_prompt.format(query=query, source_text=source_text)
@@ -41,7 +41,7 @@ def generate_llm_answer(
 
 
 def generate_venice_response(
-    message: str, temperature: float = 0.5, model: str = "llama-4-maverick-17b"
+    message: str, temperature: float = 0.5, model: str = "mistral-31-24b"
 ) -> str:
     """
     Sends a single user message to the Venice API and returns the assistant's reply.
