@@ -15,7 +15,8 @@ Content:
 \"\"\"
 {content}
 \"\"\"
-Enhanced with Quotation:
+
+Updated Output:
 """
 
 STATS_PROMPT = """
@@ -32,7 +33,8 @@ Content:
 \"\"\"
 {content}
 \"\"\"
-Enhanced with Statistic:
+
+Updated Output:
 """
 
 FLUENCY_PROMPT = """
@@ -49,7 +51,8 @@ Content:
 \"\"\"
 {content}
 \"\"\"
-Fluency-Optimized Version:
+
+Updated Output:
 """
 
 KEYWORD_STUFFING_PROMPT = """
@@ -70,5 +73,4 @@ Add NEW keywords in the source that optimize the content in accordance with SEO 
 6. Retain all existing citation markers (e.g., [1], [2], etc.) in the output where they appear.
 
 Updated Output:
-<updated text>
 """
