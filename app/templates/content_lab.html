@@ -4,38 +4,31 @@
   <meta charset="UTF-8" />
   <title>Content Lab – RankLab AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- favicon -->
   <link rel="icon" href="/static/img/favicon.png" type="image/png" />
-
-  <!-- tachyons & your styles -->
-  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/styles.css" />
-
-  <!-- *** Material Icons Outlined *** -->
-  <link
-    href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
 </head>
-<body class="bg-near-white">
+
+<body class="bg-gray-50 min-h-screen">
   <div class="flex">
     {% include "partials/sidebar.html" %}
 
-    <main class="flex-auto pa4">
-      <div class="mb4">
-        <h2 class="header black-80 mb2">
-          <span class="material-icons-outlined v-mid mr2">science</span>
+    <main class="flex-1 p-6">
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold">
+          <span class="material-icons-outlined align-middle mr-2">science</span>
           Content Lab
         </h2>
-        <span class="f6 gray mb4 db">Choose an optimization and tweak your text.</span>
+        <span class="text-sm text-gray-500">Choose an optimization and tweak your content.</span>
       </div>
 
-
-      <form method="post" action="/content-lab" class="mb4">
-        <div class="mb3">
-          <label class="f5 db mb2">Optimization Method</label>
-          <select name="method" class="input-reset pa2 br2 b--black-20 w-100" required>
+      <form method="post" action="/content-lab" id="labForm">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Optimization Method</label>
+          <select name="method"
+                  class="w-full p-2 border border-gray-300 rounded bg-white"
+                  required>
             <option value="" selected>-- pick one --</option>
             {% for m in methods %}
               <option value="{{ m }}" {% if m == selected_method %}selected{% endif %}>{{ m }}</option>
@@ -43,53 +36,43 @@
           </select>
         </div>
 
-        <div class="mb3">
-          <label class="f5 db mb2">Draft Content</label>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Draft Content</label>
           <textarea
             name="content"
             rows="12"
-            class="w-100 pa3 ba b--black-20 br3 bg-white"
-            required
-          >{{ content or '' }}</textarea>
+            class="w-full p-3 border border-gray-300 rounded bg-white"
+            required>{{ content or '' }}</textarea>
         </div>
 
-      {% if scores %}
+        {% if scores %}
           {% set items = scores.items() | list %}
-          <div class="mt4">
-            <h3 class="f5 fw6 black-60 mb2">Metric Scores:</h3>
+          <div class="mt-4">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">Metric Scores:</h3>
 
-            <!-- First row: first 4 metrics -->
-            <div class="flex flex-wrap gap2 mb3">
-              {% for label, value in items[:4] %}
-                <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
-                  <div class="f6 black-70">{{ label }}</div>
-                  <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
+            <div class="flex flex-wrap gap-2 mb-4">
+              {% for label, value in items %}
+                <div class="bg-white p-4 rounded-lg shadow-md w-60">
+                  <div class="text-sm text-gray-600">{{ label }}</div>
+                  <div class="text-2xl font-bold text-gray-900">{{ "%.2f"|format(value) }}%</div>
                 </div>
               {% endfor %}
             </div>
-
-            <!-- Second row: remaining metrics -->
-            <div class="flex flex-wrap gap2 mb4">
-              {% for label, value in items[4:] %}
-                <div class="bg-white pa3 br3 mr3 mb3 card-custom w5">
-                  <div class="f6 black-70">{{ label }}</div>
-                  <div class="f2 fw7 black-90">{{ "%.2f"|format(value) }}%</div>
-                </div>
-              {% endfor %}
-            </div>
+          </div>
         {% endif %}
 
-        <input type="hidden" name="original_copy" value="{{ content|e }}" />
+        <input type="hidden" name="original_copy" value="{{ original_copy|e }}" />
 
-        <div class="mt3 flex gap2">
-          <button type="submit" class="br2 ph4 pv2 b white bg-black hover-bg-dark-gray">
+        <div class="mt-3 flex gap-3">
+          <button type="submit"
+                  class="inline-block rounded-lg px-5 py-3 text-base font-semibold text-white"
+                  style="background-color: {{ CURRENT_THEME['primary'] }};">
             {% if selected_method %}Re-Run Optimization{% else %}Run Optimization{% endif %}
           </button>
-          <button
-            type="button"
-            class="br2 ph4 pv2 b bg-light-gray black hover-bg-moon-gray ml3"
-            onclick="document.querySelector('textarea[name=content]').value = {{ original_copy | tojson | safe }}"
-          >
+
+          <button type="button"
+                  class="inline-block rounded-lg px-5 py-3 text-base font-semibold text-black bg-gray-200 hover:bg-gray-300"
+                  onclick="document.querySelector('textarea[name=content]').value = {{ original_copy | tojson | safe }}">
             Reset
           </button>
         </div>
