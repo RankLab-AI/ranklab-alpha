@@ -1,5 +1,3 @@
-# File: app/metrics.py
-
 import re
 import math
 import itertools
@@ -264,3 +262,176 @@ def impression_follow_detailed_spacy(
 
     # if no citations at all, fall back to uniform
     return _normalize(follow_counts, normalize)
+
+
+def metric_authoritativeness(
+    doc: Doc,
+    query: str,
+    n: int = 5,
+    normalize: bool = True,
+) -> List[float]:
+    """
+    Authoritativeness = 0.5 * Influence + 0.3 * (1 - Position) + 0.2 * Relevance
+    """
+    influence = impression_influence_detailed_spacy(doc, query, n, normalize=False)
+    position = impression_pos_count_simple_spacy(doc, n, normalize=False)
+    relevance = impression_relevance_sm_spacy(doc, query, n, normalize=False)
+
+    scores = []
+    for i in range(n):
+        inv_pos = 1.0 - position[i] if position[i] <= 1.0 else 0.0
+        score = 0.5 * influence[i] + 0.3 * inv_pos + 0.2 * relevance[i]
+        scores.append(score)
+
+    return _normalize(scores, normalize)
+
+
+def metric_sourceability(
+    doc: Doc,
+    query: str,
+    n: int = 5,
+    normalize: bool = True,
+) -> List[float]:
+    """
+    Source-ability = 0.4 * Word-only + 0.4 * Follow-Up + 0.2 * Relevance
+    """
+    word_only = impression_word_count_simple_spacy(doc, n, normalize=False)
+    follow_up = impression_follow_detailed_spacy(doc, query, n, normalize=False)
+    relevance = impression_relevance_sm_spacy(doc, query, n, normalize=False)
+
+    scores = [0.4 * word_only[i] + 0.4 * follow_up[i] + 0.2 * relevance[i] for i in range(n)]
+    return _normalize(scores, normalize)
+
+
+def metric_uniqueness_cited(
+    doc: Doc,
+    query: str,
+    n: int = 5,
+    normalize: bool = True,
+) -> List[float]:
+    """
+    Citation-based Uniqueness = 0.6 * Uniqueness + 0.4 * Diversity
+    Requires citation-tagged content.
+    """
+    uniq = impression_uniqueness_detailed_spacy(doc, query, n, normalize=False)
+    diversity = impression_diversity_detailed_spacy(doc, query, n, normalize=False)
+    scores = [0.6 * uniq[i] + 0.4 * diversity[i] for i in range(n)]
+    return _normalize(scores, normalize)
+
+
+def metric_uniqueness(doc: Doc) -> float:
+    """
+    Whole-document uniqueness using lexical diversity + syntactic variation.
+    Use this for uncited text.
+    """
+    return overall_uniqueness(doc)
+
+
+def overall_authoritativeness(doc: Doc) -> float:
+    """
+    Stricter intrinsic authoritativeness score:
+    Requires both high sentence length and strong lexical diversity.
+    """
+    sents = list(itertools.chain(*doc))
+    if not sents:
+        return 0.0
+
+    total_tokens = 0
+    total_types = set()
+    total_length = 0
+    for tokens, _, _ in sents:
+        total_tokens += len(tokens)
+        total_types.update(t.lower() for t in tokens if len(t) > 2)
+        total_length += len(tokens)
+
+    avg_sent_len = total_length / len(sents)
+    type_token_ratio = len(total_types) / max(total_tokens, 1)
+
+    # Cap each subscore more aggressively
+    len_score = min(avg_sent_len / 30.0, 1.0)  # longer required
+    type_score = min(type_token_ratio / 0.7, 1.0)  # needs to be >0.7 to max
+
+    # Apply stricter decay: only high if both are high, otherwise diminish
+    if len_score < 0.7 or type_score < 0.7:
+        # If either is low, penalize heavily
+        return 0.5 * len_score * 0.5 + 0.5 * type_score * 0.5
+    return 0.5 * len_score + 0.5 * type_score
+
+
+def overall_sourceability(doc: Doc) -> float:
+    """
+    Stricter sourceability: only rewards actual named entities, numerics, and true URLs.
+    """
+    import re
+
+    sents = list(itertools.chain(*doc))
+    if not sents:
+        return 0.0
+
+    # Use spaCy NER for named entities
+    nlp_ner = spacy.load("en_core_web_sm", disable=["parser"])
+    ner_text = "\n".join(sent for _, sent, _ in itertools.chain(*doc))
+    ents = nlp_ner(ner_text).ents
+    named_entities = {
+        ent.text
+        for ent in ents
+        if ent.label_ in {"ORG", "GPE", "PERSON", "PRODUCT", "EVENT", "WORK_OF_ART"}
+    }
+
+    url_pattern = re.compile(r"https?://|www\.")
+
+    num_tokens = 0
+    named_entity_hits = 0
+    url_tokens = 0
+
+    for tokens, _, _ in sents:
+        for tok in tokens:
+            if tok.isnumeric():
+                num_tokens += 1
+            if tok in named_entities:
+                named_entity_hits += 1
+            if url_pattern.search(tok):
+                url_tokens += 1
+
+    total = max(len(sents), 1)
+    score = (
+        0.4 * (num_tokens / total) + 0.4 * (named_entity_hits / total) + 0.2 * (url_tokens / total)
+    )
+    return min(score, 1.0)
+
+
+def overall_uniqueness(doc: Doc) -> float:
+    """
+    Stricter uniqueness: higher diversity threshold, dampened score for minor variation,
+    and penalty for n-gram redundancy.
+    """
+    import numpy as np
+    from collections import Counter
+
+    sents = list(itertools.chain(*doc))
+    if not sents:
+        return 0.0
+
+    token_counts = []
+    all_tokens = []
+
+    for tokens, _, _ in sents:
+        token_counts.append(len(tokens))
+        all_tokens.extend([t.lower() for t in tokens if len(t) > 2])
+
+    total_tokens = len(all_tokens)
+    types = set(all_tokens)
+    type_token_ratio = len(types) / max(total_tokens, 1)
+    sent_len_std = np.std(token_counts) / max(np.mean(token_counts), 1)
+
+    # Apply stricter scaling
+    capped_diversity = max(0.0, min((type_token_ratio - 0.5) / 0.4, 1.0))
+    capped_std = max(0.0, min((sent_len_std - 0.3) / 1.5, 1.0))
+
+    # Penalize n-gram redundancy
+    trigrams = list(zip(all_tokens, all_tokens[1:], all_tokens[2:]))
+    trigram_counts = Counter(trigrams)
+    redundancy_penalty = max(trigram_counts.values()) / len(trigrams) if trigrams else 0
+
+    base_score = 0.6 * capped_diversity + 0.4 * capped_std
+    return base_score * (1 - redundancy_penalty)
