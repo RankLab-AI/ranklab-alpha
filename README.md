@@ -8,7 +8,7 @@
 ## 🧠 Tech Stack
 
 - **FastAPI** – Backend API and server-rendered views
-- **HTMX + Tachyons** – Minimalist frontend with no JS bundling
+- **HTMX + Tailwind CSS** – Minimalist, utility-first frontend with no JavaScript bundling
 - **LLaMA 3.2** – Content rewriting and evaluation model
 - **Firebase** – Auth and user data storage
 - **SentenceTransformers, GPT-2, Custom Metrics** – GEO-style scoring logic
@@ -72,25 +72,97 @@ Then fill in the following values using the Firebase Console:
 Then fill in the remaining required values:
 - `FIREBASE_SERVICE_ACCOUNT_JSON` (for using JSON credentials)
 - `VENICE_API_KEY` → **used for calling the Venice.ai enhanced LLM completions**
+- `GROQ_API_KEY` → **used for accessing Groq-hosted LLM models**
 
-### 4. 🔐 Firebase Setup (Required for Auth)
+> ℹ️ These API keys are required for advanced LLM processing and content rewriting. If not provided, some treatments may be unavailable or fallback to basic completions.
 
-To enable Firebase authentication:
-1.	Go to Firebase Console.
-2.	Select the project [ranklab-app](https://console.firebase.google.com/u/3/project/ranklab-app/overview)
-3.	Navigate to **Project Settings** → **Service Accounts**.
-4.	Click **Generate new private key**.
-5.	Save the JSON file and place it in your project (e.g., /secrets/firebase-creds.json).
-6.	In your .env file, set:
-```bash
-FIREBASE_SERVICE_ACCOUNT_JSON=secrets/firebase-creds.json
-```
+### 4. Firebase Setup and Service Account
+
+To enable authentication and admin operations in your Firebase project, follow these steps to set up Firebase and obtain a Service Account JSON file:
+
+#### 1. Set Up a Firebase Project from Scratch
+
+> 💡 **Note:** As of now, RankLab Alpha has not onboarded any clients, so you are free to set up a brand new Firebase project and database from scratch. There is no requirement to connect to an existing instance.
+
+1. Visit the [Firebase Console](https://console.firebase.google.com/) and create a new project (or select an existing one).
+2. Go to **Project Settings → General → Your apps** and register your app (choose "Web" if asked).
+3. Enable **Email/Password Authentication**:
+   - Navigate to **Authentication → Sign-in method**.
+   - Enable the **Email/Password** provider.
+
+4. Set up **Cloud Firestore**:
+   - Go to **Firestore Database**.
+   - Click **Create Database** and choose **Start in test mode** (recommended for dev).
+
+#### 2. Generate Service Account Key
+
+1. In the **Firebase Console**, navigate to **Project Settings → Service Accounts**.
+2. Click **Generate new private key** and confirm.
+3. Download the resulting JSON file and save it to your project root as:
+
+   ```
+   firebase-admin.creds.json
+   ```
+
+4. In your `.env` file, add:
+
+   ```
+   FIREBASE_SERVICE_ACCOUNT_JSON=firebase-admin.creds.json
+   ```
+
+> 🛑 This project’s `.gitignore` already excludes any `*.creds.json` files, so this file will not be committed to version control if you follow the naming convention above.
+
+This setup enables authentication and Firestore access in development and production.
 
 ### 5. Run the App Locally
 
 ```bash
 uvicorn app.main:app --reload
 ```
+
+## 🚢 Deployment
+
+You can deploy RankLab Alpha quickly using services like [Render](https://render.com/), which support FastAPI and static file hosting.
+
+### Render Deployment Steps
+
+1. **Push your code to GitHub**  
+   Ensure your repository is hosted on GitHub and the latest changes are committed.
+
+2. **Create a new Web Service on Render**  
+   - Go to [Render Dashboard](https://dashboard.render.com/)
+   - Click **New → Web Service**
+   - Connect your GitHub repository
+
+3. **Configure build settings**  
+   - **Environment:** Python 3.11 or higher
+   - **Build Command:**  
+     ```
+     pip install -r requirements.txt
+     ```
+   - **Start Command:**  
+     ```
+     uvicorn app.main:app --host 0.0.0.0 --port 8000
+     ```
+
+4. **Set Environment Variables**  
+   In the **Environment** section, add all required variables from your `.env` file:
+   - `FIREBASE_API_KEY`
+   - `FIREBASE_AUTH_DOMAIN`
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_APP_ID`
+   - `FIREBASE_SERVICE_ACCOUNT_JSON`
+   - `FIREBASE_STORAGE_BUCKET`
+   - `VENICE_API_KEY`
+   - `GROQ_API_KEY`
+
+5. **Upload Service Account File (if needed)**  
+   You can upload your `firebase-admin.creds.json` via the Render **Secret Files** feature or manually reference it in your `.env`.
+
+6. **Deploy**  
+   Click **Create Web Service** and Render will build and deploy your app.
+
+> ✅ Tip: Render auto-deploys on new commits to your GitHub repo. You can configure deploy hooks or manual redeploys as needed.
 
 ## 🤝 Contributing
 
